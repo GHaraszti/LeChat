@@ -1,6 +1,8 @@
 const path = require('path');
 const express = require('express');
 const app = express();
+const socketIO = require('socket.io');
+
 const http = require('http');
 const https = require('https');
 
@@ -12,12 +14,24 @@ const React = require('react');
 
 const ReactDOMServer = require('react-dom/server');
 
+//Socket setup
+const server = http.createServer(app);
+const io = socketIO(server);
+
 //react components
 // const Login = React.createFactory(require('./dist/login.js'));
 //React.createFactory(require('./src/components/login_server'))
 
 //Serving static files
 app.use(express.static(path.join(__dirname, '')));
+
+io.on('connection', (socket) =>{
+  console.log('New user connected');
+
+  socket.on('disconnect', function (){
+    console.log('New user disconnection');
+  });
+});
 
 //CORS able
 app.use(function(req, res, next) {
@@ -41,6 +55,6 @@ app.use((error, request, response, next) => {
 
 // app.use(errorHandler);
 
-app.listen(httpPort, ()=>{
+server.listen(httpPort, ()=>{
     console.log(`HTTP server is listening on ${httpPort}`)
 });
