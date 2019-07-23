@@ -1,0 +1,9 @@
+[PENDING]:
+    [BUGS]:
+        - When good user but wrong password, token returns promise and no value, which saves an invalid token ("[object Promise()]"). setToken is disabled for now so it doesn't save the invalid token. Same happens with variations of this condition.
+        - Logs user in even if credentials are wrong when it  has valid token, isn't completely wrong, but needs work, specially sinsce utility functions like validateToken(client side) and validEmail(server side) are dummies or need work.
+
+    [UNFINISHED]:
+        -Utility funciontions: validEmail, validToken, etc.
+        -Irregularities on login and authenticate(knockknock).
+        -Store and redux layer still needs work and update to sagas-redux. 
