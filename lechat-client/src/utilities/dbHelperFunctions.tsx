@@ -1,9 +1,13 @@
 import axios from "axios";
+import {getToken} from "./authHelperFunctions";
+
+const url = "http://localhost:3000";
 
 const fetchPosts = () =>{
+    console.log("????????????????:", getToken(window.document.cookie));
 
     return axios.get(
-        'http://localhost:3000/api/posts'
+        url + '/api/posts'
     ).then(
         function(response:any){
         let list = response.data.posts;
@@ -18,6 +22,21 @@ const fetchPosts = () =>{
     });
 }
 
+const addPost = (post:object) => {
+    return axios.post(
+        url + '/api/posts',
+        {...post}
+    ).then(
+        function(response:any){
+            return {success: true};
+        },
+        function(){
+
+        }
+    )
+}
+
 export {
-    fetchPosts
+    fetchPosts,
+    addPost
 }

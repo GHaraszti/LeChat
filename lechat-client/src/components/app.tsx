@@ -1,4 +1,6 @@
 import * as React from "react";
+import {connect} from "react-redux";
+
 import {
     BrowserRouter as Router,
     Link,
@@ -6,6 +8,7 @@ import {
     Switch,
     Redirect,
   } from 'react-router-dom';
+// import * as IO from 'socket.io-client';
 
 import Login from "./login";
 import Register from "./register";
@@ -29,14 +32,16 @@ const fakeAuth = {
     }
 }
 
+// const socket = IO();
+
 import * as auth from "../utilities/authHelperFunctions" 
 
 class App extends React.Component <any, any>{
     constructor(props:any){
         super(props);
-        console.log("App: constr /////////////");
+        // console.log("App: constr /////////////");
         //console.log("Current token: ", auth.getToken(props.cookie));
-        console.log("props: ", props.cookie);
+        // console.log("props: ", props.cookie);
 
         props = { 
             ...this.props,
@@ -49,18 +54,24 @@ class App extends React.Component <any, any>{
             isAuthenticated: this.props.isAuthenticated
         }
 
-        console.log("App: initial state:", this.state);
-        console.log("App: initial state:", props);
-        console.log("---------------------------------");
+        // console.log("App: initial state:", this.state);
+        // console.log("App: initial state:", props);
+        // console.log("---------------------------------");
     }
      
 
     async componentDidMount (){
-        console.log("Component did mount.", this.props);
+        // socket.on('connect', () =>{
+        //     console.log('New user connected');
+        // });
 
-        // setTimeout(()=>{
-        //     this.setState({isAuthenticated:true});
-        // }, 5000);
+        // socket.on('disconnect', () =>{
+        //     console.log('Disconected from server');
+        // });
+
+        // socket.on('newPost', (newPost:{text: string, from: string})=>{
+        //     console.log("New post arrived: ", newPost.text);
+        // })
 
     }
 
@@ -119,8 +130,8 @@ class App extends React.Component <any, any>{
     render(){
         console.log("app:render...");
         let rNum = Math.random();
-        console.log("App:render:state: ", this.state);
-        console.log("---------------------------------");
+        // console.log("App:render:state: ", this.state);
+        // console.log("---------------------------------");
         //this.state = {isAuthenticated:true};
 
         let html = <Router>
@@ -131,10 +142,10 @@ class App extends React.Component <any, any>{
                     <Route path="/register" render={()=><Register/>}></Route>
                     <Route path="/home" render={()=><Dashboard/>}></Route>
                     <Route exact path="/" children={(props:any)=>{
-                            console.log("app:state: ", this.state);
-                            console.log("app:props: ", props);
-                            console.log("app:path: ", props.location.pathname);
-                            console.log("---------------------------------");
+                            // console.log("app:state: ", this.state);
+                            // console.log("app:props: ", props);
+                            // console.log("app:path: ", props.location.pathname);
+                            // console.log("---------------------------------");
     
                             // setInterval(()=>{
                             //     props.history.push("/home");
@@ -161,4 +172,21 @@ class App extends React.Component <any, any>{
     }
 }
 
+// const mapDispatcherToProps = {
+//     // dispatching plain actions
+//     getComments: () => ({ type: 'FETCH_COMMENTS' }),
+//     addComment: (content:any) => ({type: 'ADD_COMMENT',
+//     payload: {
+//         content
+//     }
+//   })
+// };
+
+// const mapStateToProps = (state:any, ownProps:any) => {
+//   console.log("Store updated!!! state: ", state);
+//   return {state,
+//   ownProps};
+// };
+
+// export default connect(mapStateToProps, mapDispatcherToProps)(App);
 export default App;

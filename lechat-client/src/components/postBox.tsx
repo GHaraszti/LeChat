@@ -14,9 +14,13 @@ class PostBox extends React.Component<any, any, any>{
 
     }
 
+    whoAmI = ()=>{
+
+    }
+
     postMessage = (event: any) => {
         //alert(this.props);
-        this.props.clickHandler({username: "quiensabe", text: this.state.textInput});
+        this.props.clickHandler({sentBy: "qwe@asd.com", text: this.state.textInput, convo: "5d36425fc092f1520b39a081"});
         console.log(this.state.textInput);
         this.setState({
             textInput : ""

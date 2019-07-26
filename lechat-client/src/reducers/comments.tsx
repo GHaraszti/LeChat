@@ -26,11 +26,25 @@
 export default function comments(state = {}, action:any) {
     switch (action.type) {
         case 'FETCH_COMMENTS':
-            console.log("Action received!!! fetchComments:", state);
-            return {...action};
+            console.log("Action received!!! fetchComments:", state, action);
+            if(!action.content){
+                console.log("something went wrong fetching:", action);
+
+                return state;
+            }
+            return action.content;
         case 'ADD_COMMENT':
-            console.log("Action received!!! addComment", action);
-            return {result: action.payload};
+            console.log("Action received!!! addComment", state);
+            return state;
+        case 'SEND_COMMENT':
+            console.log("Action received!!! sendComment", state);
+            return {...action};
+        case 'NEW_COMMENT':
+            console.log("Action received!!! newComment", state);
+            return state;
+        case 'BROADCAST_COMMENT':
+                console.log("Action received!!! broadcastComment", state);
+                return {...action};
         default:
             return state
     }

@@ -6,6 +6,7 @@ const _ = require('lodash');
 const express = require('express');
 const {ObjectID} = require('mongodb');
 const bodyParser = require('body-parser');
+const IO = require('socket.io');
 
 const xj = require('express-jwt');
 const bcrypt = require('bcryptjs');
@@ -32,6 +33,8 @@ const jwtMW = xj({
   secret: secret
 });
 
+const socket = IO();
+
 //Validate email
 const validEmail = function (email){
   return /.+\@.+\..+/.test(email);
@@ -52,6 +55,28 @@ const getConvos = function(email){
 
 //Middleware
 app.use(bodyParser.json());
+
+app.use(function(req, res, next){
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    jwt.verify(token, secret, function(err, payload){
+      if(payload){
+        console.log("Hello friend.");
+        user.findOne({email: payload.email}).then(
+          (doc)=>{
+            req.user = doc;
+            next();
+          }
+        )
+      }
+      console.log("Sorry. I don't remember you.");
+    })
+  } catch(e){
+    console.log("Not authenticated.");
+    req.user = "[NO USER]";
+    next();
+  }
+})
 
 app.use(express.static(__dirname));
 
@@ -90,6 +115,7 @@ app.use(function(req, res, next) {
 
 //App middleware
 app.get('/api/posts', (req, res) => {
+
   Post.find().then((posts) => {
     console.log(posts)
     if(!posts) {
@@ -285,30 +311,40 @@ app.get('/users/:email', (req, res) =>{
   });
 });
 
-app.post('/posts', (req, res) => {
-  var id = req.body.sentBy;
+app.post('/api/posts/', (req, res) => {
+  var email = req.body.content.sentBy;
 
-  console.log(id);
-  if(!ObjectID.isValid(id)) {
-    return res.status(404).send();
+  const getThem = async () => {
+    let user = await User.findOne({email: email});
+    //Temp fixed convoID
+    let convo = await Convo.findById("5d36425fc092f1520b39a081");
+
+    console.log(email);
+    if(!user && !convo) {
+      return res.status(404).send();
+    }
+  
+    var post = new Post({
+      text: req.body.content.text,
+      sentBy: user,
+      convo: convo
+    });
+  
+     await post.save().then((doc) => {
+        res.status(200).json({doc});
+    }, (e) => {
+       res.status(400).send(e);
+     });
   }
 
-  var post = new Post({
-    text: req.body.text,
-    sentBy: id
-  });
-
-   post.save().then((doc) => {
-     res.send(doc);
-   }, (e) => {
-     res.status(400).send(e);
-   });
+  getThem();
 });
 
  
 app.get('/posts/:userID', (req, res) =>{
   //Test user
   //{ "_id" : ObjectId("5d0bd7baa35a0b13f3bb2a89"), "email" : "someone@something.smg", "name" : "Lemoi", "__v" : 0 }
+
   var id = req.params.userID;
 
   if(!ObjectID.isValid(id)) {
@@ -326,7 +362,7 @@ app.get('/posts/:userID', (req, res) =>{
   });
 });
 
-app.delete('/posts/:postID', (req, res) => {
+app.delete('api/posts/:postID', (req, res) => {
    var id = req.params.postID;
 
    if(!ObjectID.isValid(id)) {

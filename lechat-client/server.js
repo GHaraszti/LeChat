@@ -25,12 +25,38 @@ const io = socketIO(server);
 //Serving static files
 app.use(express.static(path.join(__dirname, '')));
 
+var generateMessage = (from, text) => {
+  return {
+    from,
+    text,
+    createdAt: new Date()
+  };
+};
+
 io.on('connection', (socket) =>{
   console.log('New user connected');
 
+  socket.on('addPost', function (post){
+    console.log('New message posted.', post);
+    io.emit("newPost",generateMessage("Juanita", "Hi everyone."));
+  });
+
+  socket.on('broadcastPost', function (){
+    console.log("New comment has been posted");
+    
+    socket.broadcast.emit("newPost");
+  });
+
   socket.on('disconnect', function (){
     console.log('New user disconnection');
+    socket.removeAllListeners();
   });
+
+  // socket.emit('newPost', generateMessage("Admin", "Welcome to LeChat"));
+
+  // setTimeout(()=>{
+  //   io.emit("newPost", generateMessage("Unknown", "This is a message from an unknown user."))
+  // }, 10000)
 });
 
 //CORS able
