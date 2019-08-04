@@ -34,29 +34,54 @@ var generateMessage = (from, text) => {
 };
 
 io.on('connection', (socket) =>{
-  console.log('New user connected');
+      console.log('New user connected');
 
-  socket.on('addPost', function (post){
-    console.log('New message posted.', post);
-    io.emit("newPost",generateMessage("Juanita", "Hi everyone."));
-  });
+      // socket.emit("listen", ()=>{
+      //     console.log("Watch  out!!!!");
+      // });
 
-  socket.on('broadcastPost', function (){
-    console.log("New comment has been posted");
-    
-    socket.broadcast.emit("newPost");
-  });
 
-  socket.on('disconnect', function (){
-    console.log('New user disconnection');
-    socket.removeAllListeners();
-  });
+      socket.on('listen', ()=>{
+        console.log("Im listening client...")
+      })
 
-  // socket.emit('newPost', generateMessage("Admin", "Welcome to LeChat"));
+      socket.on('joinRooms', (params) => {
+        // if(!isRealString(params.name) || !isRealString(params.room)) {
+        //   callback('Name and room name are required.');
+        // }
+        console.log("Which rooms are you subscribing to: ", ...params);
 
-  // setTimeout(()=>{
-  //   io.emit("newPost", generateMessage("Unknown", "This is a message from an unknown user."))
-  // }, 10000)
+        params.forEach(convo => {
+          socket.join(convo._id);
+        });
+
+        // socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
+        setTimeout(()=>{socket.broadcast.to(params[0]._id).emit('listen')}, 5000);
+
+        // callback();
+      });
+
+      socket.on('addPost', function (post){
+        console.log('New message posted.', post);
+        io.to(post.convoID).emit("newPost",generateMessage("Juanita", "Hi everyone."));
+      });
+
+      socket.on('broadcastPost', function (params){
+        console.log("New comment has been posted", params.convoID);
+        
+        socket.broadcast.to(params.convoID).emit("newPost");
+      });
+
+      socket.on('disconnect', function (){
+        console.log('New user disconnection');
+        //socket.removeAllListeners();
+      });
+
+      // socket.emit('newPost', generateMessage("Admin", "Welcome to LeChat"));
+
+      // setTimeout(()=>{
+      //   io.emit("listen", "Heeeey, listen!!!")
+      // }, 10000);
 });
 
 //CORS able
@@ -66,9 +91,9 @@ app.use(function(req, res, next) {
   next();
 });
 
-// app.get('/', (req, res, next) => {
-
-// });
+app.get('*', (req, res, next) => {
+  res.redirect("/");
+});
 
 // app.all('*', (request, response, next) => {
 //   response.status(404).send('Not found... did you mean to go to /about instead?')

@@ -1,32 +1,11 @@
 import * as React from "react";
 import { Route, Link } from "react-router-dom";
+
+import {connect} from "react-redux";
+
 //import PostBox from "./postBox";
 import ConvoArea from "./convoArea";
 import SideMenu from "./sideMenu";
-
-
-// const Dashboard = (props:any)=>{
-//     console.log("Loading dashboard");
-//     console.log(props);
-
-//     return <div>
-//         <div id="side" className="navbar navbar-expand-lg navbar-light bg-light">
-//             <Link to={`${props.match.path}/cosa1`} className="navbar-brand">Cosa 1</Link>
-//             <Link to={`${props.match.path}/cosa2`} className="navbar-brand">Cosa 2</Link>
-//         </div>
-//         <div id="main">
-//             <Route path={`${props.match.path}/cosa1`} render={(routeProps:any)=>(
-//                 <p>VVVVVVVVVV</p>
-//             )}></Route>
-//             <Route path={`${props.match.path}/cosa2`} render={(routeProps:any)=>(
-//                 <p>^^^^^^^^^^</p>
-//             )}></Route>
-//         </div>
-//     </div>
-// };
-
-//html comment regex: (\<\!\-\-.+\-\-\>)
-//replace with: {/*$1*/}
 
 const pbStyle = {
     "width": "50%", 
@@ -35,9 +14,30 @@ const pbStyle = {
     "ariaValuemax": 100
 }
 
+const mapDispatcherToProps = {
+  // dispatching plain actions
+  getComments: (convoID:string) => ({ type: 'FETCH_COMMENTS', 
+      content: {
+          convoID
+      }
+  })
+};
+
+const mapStateToProps = (state:any, ownProps:any) => {
+console.log("Store updated!!! dashboard: ", state, ownProps);
+// this.state.socket.emit("newPost");
+return {state,
+ownProps};
+};
+
 class Dashboard extends React.Component <any, any>{
     constructor(props:any){
         super(props);
+        props = {
+          ...this.props,
+          ...props
+        }
+
         console.log("Dashboard:properties: ", props);
         this.state = {
             ui: {
@@ -53,31 +53,53 @@ class Dashboard extends React.Component <any, any>{
                     name: "John Doe"
                 }
             },
-            convos: {
-                //This is just a temp structure
-                "Juanita": {},
-                "Perenganita": {},
-            },
+            convos: this.props.user.convos || [],
             focus: {
                 convo: {
-                    ID: "Juanita",
+                    ID: null,
 
                 }
-            }
+            },
+            messages:[
+
+            ]
         };
-        this.postMessage = this.postMessage.bind(this);
+
+        //this.postMessage = this.postMessage.bind(this);
     }
 
-    postMessage (event:any){
-        alert("Hey");
-    } 
+    convoLoader = (convoID:string)=>{
+      console.log("Loading convo...", convoID);
+      // this.setState({
+      //   focus: {
+      //       convo: {
+      //           ID: convoID,
+      //       },
+      //       messages: []
+      //   }
+      // })
+
+      this.props.getComments(convoID);  
+      this.setState({
+        focus: {
+          convo: {
+            ID: convoID
+          }
+        }
+      });
+    }
+    
+    componentDidUpdate = ()=>{
+
+    }
 
     render(){
+      console.log("Dashboard: render: user & state: ", this.props.user, this.state);
         const html = 
             // {/*<!-- Page Wrapper -->*/}
             <div id="wrapper">
           
-            <SideMenu />
+            <SideMenu convos={this.state.convos} convoLoader={this.convoLoader}/>
           
               {/* {/*<!-- Content Wrapper -->*/}
               <div id="content-wrapper" className="d-flex flex-column">
@@ -268,7 +290,7 @@ class Dashboard extends React.Component <any, any>{
                   </nav>
                   {/*<!-- End of Topbar -->*/}
           
-                    <ConvoArea convo={{ID: "Juanita"}}/>
+                    <ConvoArea convoID={this.state.focus.convo.ID} user={this.props.user}/>
           
                 </div>
                 {/*<!-- End of Main Content -->*/}
@@ -319,4 +341,5 @@ class Dashboard extends React.Component <any, any>{
 
 };
 
-export default Dashboard;
+// export default Dashboard;
+export default connect(mapStateToProps, mapDispatcherToProps)(Dashboard);

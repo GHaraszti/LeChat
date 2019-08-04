@@ -1,27 +1,42 @@
 import axios from "axios";
 
+const apiURL = "http://localhost:3000";
 const knockknock = async (cookies: string) => {
-    console.log("KK:", cookies);
-    console.log(1);
-    if(!cookies){
-        return new Promise((resolve, reject)=>{
-            reject("FAIL");
-        });
-    }
-    console.log(2);
+
     const token = await getToken(cookies);
     console.log("KK:token: ", token);
+
     if(token){
-        console.log(3);
-
-        return axios.get(
-            `http://localhost:3000/auth/${token}`
-        );  
+        return axios({
+            method: "GET",
+            url:`${apiURL}/auth/${token}`,
+            validateStatus: function (status) {
+                return status >= 200 && status < 300; // default
+            }
+        }
+        );
     }
-    console.log(4);
 
-    // return new Promise((resolve, reject)=>(reject({success:false})));
+    return Promise.reject(new Error("Token was not provided")).then(null, ()=> false);
 };
+
+// const knockknock = async (cookies: string) => {
+//     let token = await getToken(cookies);
+
+//     return axios.get(`${apiURL}/auth/${token}`).then(
+//             (response:any)=>{
+//             let token = response.data.token;
+//             console.log("Token is valid, welcome: ", token);    
+//             //this.setState(()=>({isAuthenticated: true}));
+//             return true;
+//         },
+//             function(response:any){
+//             console.log("Token is not valid, back off: ", response);
+//             //this.setState(()=>({isAuthenticated: false}));
+//             return false;
+//         }
+//     );  
+// }
 
 const login = async (email:any, password:any) =>{
 
@@ -30,25 +45,34 @@ const login = async (email:any, password:any) =>{
         return new Promise(()=>{return false});
     }
 
-    return axios.post(
-        'http://localhost:3000/login/',
-        {
+    return axios({
+        method: "POST",
+        url:`${apiURL}/login/`,
+        data: {
             email, password
+        },
+        validateStatus: function (status) {
+            return status >= 200 && status < 300; // default
         }
+    }
     ).then(
         function(response:any){
         let token = response.data.token;
-        console.log("Login: token response: ", response.data);
+        //console.log("Login: token response: ", response.data);
 
-        setToken(token, 300000);
+        setToken(token, 60000);
 
-        return token;
+        return response;
     },
-        function(response:any){
+        function(reason:any){
 
-        console.log(response);
-        return "";
+        //console.log(response);
+        return {error: reason};
     });
+}
+
+const logout = () => {
+    document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
 
 const setToken = (token:string, exp:number) => {
@@ -87,6 +111,10 @@ const getToken = (cookie:string) => {
     return token;
 }
 
+const removeCookie = () => {
+
+}
+
 const validEmail = (email:string) => {
     return /.+\@.+\..+/.test(email);
 }
@@ -95,5 +123,6 @@ export {
     login,
     getToken,
     setToken,
-    knockknock
+    knockknock,
+    logout
 }

@@ -33,12 +33,9 @@ console.log("Store", store.getState());
 
 ReactDOM.render(
     <Provider store={store}>
-        <App cookie={cookie} isAuthenticated={true}/> 
+        <App cookie={cookie} isAuthenticated={false}/> 
     </Provider>,
-    document.getElementById("example"),
-    ()=>{
-        console.log("YES COOKIES ////////////////////////////////////////////////////////////", this);     
-    }
+    document.getElementById("example")
 );
 
 // auth.knockknock(cookie).then(

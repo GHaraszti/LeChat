@@ -13,48 +13,43 @@ const socket = IO();
 
 const mapDispatcherToProps = {
     // dispatching plain actions
-    getComments: () => ({ type: 'FETCH_COMMENTS' }),
-    addComment: (content:any) => ({type: 'ADD_COMMENT',
-        payload: {
-            content
+    getComments: (convoID:string) => ({ type: 'FETCH_COMMENTS', 
+        content: {
+            convoID
+        }
+    }),
+    addComment: (comment:any) => ({type: 'ADD_COMMENT',
+        content: {
+            post: comment
         },
         socket: socket
     }),
-    broadcastComment: () => ({ type: 'BROADCAST_COMMENT', socket: socket}),
-    newComment: () => ({ type: 'NEW_COMMENT' })
+    newComment: (convoID:string) => ({ type: 'NEW_COMMENT', content: {
+        convoID
+    }})
 };
 
 const mapStateToProps = (state:any, ownProps:any) => {
-  console.log("Store updated!!! state: ", state, ownProps);
+  console.log("Store updated!!! convoarea: ", state, ownProps);
 // this.state.socket.emit("newPost");
   return {state,
   ownProps};
 };
 
-const messages = [
-    {username: "Pepe", text: "Hey Juanita, ontas"},
-    {username: "Juanita", text: "**Visto**"},
-]
+// const messages = [
+//     {username: "Pepe", text: "Hey Juanita, ontas"},
+//     {username: "Juanita", text: "**Visto**"},
+// ]
 
 class ConvoArea extends React.Component<any, any, any>{
     constructor (props:any){
         super(props);
-        // console.log("ConvoArea:properties: ", props);
-        // console.log("ConvoArea:properties(instance): ", this.props);
-        // console.log("ConvoArea:store", props.store);
-        //this.props.fetchCommentsActionCreator(messages);
-
-        // this.state = {
-        //     messages : [
-        //         {username: "Pepe", text: "Hey Juanita, ontas"},
-        //         {username: "Juanita", text: "**Visto**"},
-        //     ],
-        //     received: [
-        //     ]
-        // };
-        // this.state = {
-        //     messages: this.props.getComments()
+        // props = { 
+        //     ...this.props,
+        //     props
         // }
+
+        console.log("ConvoArea:properties: ", props);
 
         this.state = {
             socket: socket
@@ -66,42 +61,70 @@ class ConvoArea extends React.Component<any, any, any>{
     }
 
     componentDidMount (){
-        const socket = this.state.socket;
+        console.log("Did mount?");
+        const s = this.state.socket;
 
-        socket.on('connect', () =>{
-            console.log('New user connected');
+        s.on('connect', () =>{
+            console.log('New user on convo: ', this.props.user.convos);
+
+            socket.emit("listen");
+            //socket.emit('join', {convos: this.props.user.convos});
+            
         });
+
+        s.on("listen", ()=>{
+            console.log("Im listening server...");
+        });
+
+        // s.on("listen", ()=>{
+        //     console.log("I'm listening...");
+        // });
         
-        socket.on('disconnect', () =>{
+        s.on('disconnect', () =>{
             console.log('Disconected from server');
             socket.removeAllListeners();
         });
         
-        socket.on('newPost', async ()=>{
+        s.on('newPost', async ()=>{
             console.log("New post arrived: ");
-            await this.props.newComment();
+            //await this.props.newComment("5d36425fc092f1520b39a081");
+            this.props.newComment(this.props.convoID);
+
             // this.props.addComment({sentBy: "qwe@asd.com", text: newPost.text, convo: "5d36425fc092f1520b39a081"});
         })
+
+        socket.emit('joinRooms', this.props.user.convos);
+
+        //Temp fixed ID
+        this.props.getComments(this.props.convoID);
     }
 
-    componentDidUpdate(){
-        console.log("Component did update", this.props.state);
-    }
-    componentWillUpdate(){
-    }
+    // componentDidUpdate(){
+    //     console.log("Component did update", this.props.state);
+    //     this.getComments(this.convoID);
+    // }
+    // componentWillUpdate(){
+    //     this.props.getComments(this.props.convoID);
+    // }
 
-    updateContent = async (newMessage:{username: string, text: string}) => {
+    uploadNewMessage = async (newMessage:{username: string, text: string, convoID:string}) => {
         // this.state.messages.push(newMessage);
         // //console.log(this.state.messages);
         //await         console.log("Before dispatch: ", socket);
         // this.setState(this.state.messages);
+        newMessage.convoID = this.props.convoID;
         await this.props.addComment(newMessage);
-        await this.props.broadcastComment();
+        await this.props.newComment(this.props.convoID);
+        // this.updateDState({focus:{
+        //     convo:{
+        //         ID: convoID
+        //     }
+        // }});
     }
 
-    handleAddComments = ()=>{
-
-    }
+    // updateConvoArea = () => {
+    //     this.props.state.comments = ;
+    // }
 
     componentWillReceiveProps = ()=>{
         console.log("Will receive props: ", this.props.state);
@@ -110,7 +133,7 @@ class ConvoArea extends React.Component<any, any, any>{
     render(){
         //const messages = this.props.messages.comments.comments;
         let list = this.props.state.comments;
-        console.log("Rendering...: ", this.props);
+        console.log("ConvoArea: render...: ", this.props);
 
 
         const html = 
@@ -118,8 +141,8 @@ class ConvoArea extends React.Component<any, any, any>{
             
         {/*<!-- Page Heading -->*/}
         <div className="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 className="h3 mb-0 text-gray-800">{this.props.convo.ID}, </h1>
-            <PostBox envelope={{username:"user", text:"text"}} clickHandler={this.updateContent}/>
+            <h1 className="h3 mb-0 text-gray-800">{this.props.user.name}, </h1>
+            <PostBox envelope={{username:"user", text:"text"}} clickHandler={this.uploadNewMessage}/>
         </div>
 
         {/*<!-- Content Row -->*/}

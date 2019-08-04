@@ -1,4 +1,4 @@
-import {put, takeEvery, all, takeLatest} from 'redux-saga/effects';
+import {put, takeEvery, all, fork} from 'redux-saga/effects';
 import {fetchPosts, addPost} from "../utilities/dbHelperFunctions";
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
@@ -28,40 +28,48 @@ function* watchIncrementAsync(){
 //     yield put({type: 'FETCH_COMMENTS', content: comments });
 // }
 
+// function* fetchDBPosts(){
+//     let fetched = yield fetchPosts();
+//     yield put({type: 'FETCH_COMMENTS', content: fetched.list });
+// }
+
+
+
 function* fetchDBPosts(){
-    let fetched = yield fetchPosts();
-    yield put({type: 'FETCH_COMMENTS', content: fetched.list });
+    yield takeEvery('FETCH_COMMENTS', function*(action:any){
+        console.log("SAGAS: fetching posts for convo: ", action)
+        let fetched = yield fetchPosts(action.content.convoID);
+        yield put({type: 'COMMENTS_RECEIVED', content: fetched.list });
+    })
 }
 
 function* addDBPost(){
     yield takeEvery('ADD_COMMENT', function* (action:any){
-        console.log("SAGAS[addDBPost]: ", action.payload);
-        let payload = yield addPost(action.payload);
+        console.log("SAGAS[addDBPost] action content: ", action.content);
+        let payload = yield addPost(action.content.post);
 
-        // yield addStorePost(payload);
-        //yield put({type: "NEW_COMMENT"});
-        //yield broadcastPost();
-        //console.log("SAGAS New comment added? ", payload);
-        yield fetchDBPosts();
+        //let fetched = yield fetchPosts(action.payload.convoID);
+
+        yield put({type: 'FETCH_COMMENTS', content: {convoID: action.content.post.convoID} });
         //yield console.log("SOCKET: ", action.socket);
-        //yield box.socket.emit("broadcastPost");
-        // yield put({type: BROADCAST_COMMENT})
+        yield action.socket.emit("broadcastPost", {convoID: action.content.post.convoID});
+        //yield put({type: "BROADCAST_COMMENT", socket: action.socket})
     });
 }
 
 function* broadcastPost(){
 
     yield takeEvery("BROADCAST_COMMENT", (action:any)=>{
-        console.log("SAGAS Broadcasting new message.", action.socket);
-        action.socket.emit("broadcastPost");
+        console.log("SAGAS Broadcasting new message.", action);
+        action.socket.emit("broadcastPost", action.content.convoID);
     });
 }
 
 function* newPost(){
-    yield takeEvery("NEW_COMMENT", function* (){
+    yield takeEvery("NEW_COMMENT", function* (action:any){
         console.log("SAGAS New post");
         //yield delay(2000);
-        yield fetchDBPosts();
+        yield put({type: 'FETCH_COMMENTS', content: {convoID: action.content.convoID} });
     });
 }
 

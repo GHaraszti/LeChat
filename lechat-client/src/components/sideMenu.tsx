@@ -1,14 +1,29 @@
 import * as React from "react";
 import {Link} from "react-router-dom";
+import Convo from "./convo";
 
-class SideMenu extends React.Component {
+class SideMenu extends React.Component <any, any, any>{
     constructor(props:any){
         super(props);
+
+        console.log("SideMenu: props: ", this.props);
+        this.state = {
+          convoList : this.props.convos || [],
+          convoFocus : null
+        }
+    }
+
+    componentDidMount (){
+
     }
 
     render(){
+      console.log("Render SideMenu: state and app", this.state, this.props);
+      let list = this.state.convoList;
+      console.log(list);
+
         const html = (
-              <ul className="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+              <ul className="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" > 
           
                 <a className="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
                   <div className="sidebar-brand-icon rotate-n-15">
@@ -28,8 +43,8 @@ class SideMenu extends React.Component {
                 </li>
 
                 {/* List of conversations */}
-                <div id="myConvos">
-                    <li className="nav-item">
+                <div id="convo-list">
+                    {/* <li className="nav-item">
                         <a className="nav-link" href="#">
                         <img className="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60"/>                    
                         <span className="ml-2 d-none d-lg-inline small">Juanita</span>
@@ -41,7 +56,14 @@ class SideMenu extends React.Component {
                         <img className="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60"/>                    
                         <span className="ml-2 d-none d-lg-inline small">Perenganita</span>
                         </a>
-                    </li>
+                    </li> */}
+                    {
+                        list && list.length > 0 ?
+                        list.map((convo:any)=>{
+                        //console.log("Posts list:", post);
+                        return <Convo convoID={convo._id} convoName={convo.name} convoLoader={this.props.convoLoader}/> 
+                        }) : <p>Forever alone.</p>
+                    }
                 </div>
           
                 {/* Divider */}

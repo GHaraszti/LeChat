@@ -43,20 +43,21 @@ class App extends React.Component <any, any>{
         //console.log("Current token: ", auth.getToken(props.cookie));
         // console.log("props: ", props.cookie);
 
-        props = { 
-            ...this.props,
-            props
-        }
+        // props = { 
+        //     ...this.props,
+        //     props
+        // }
 
         //props.isAuthenticated = true;
         
         this.state = {
-            isAuthenticated: this.props.isAuthenticated
+            isAuthenticated: this.props.isAuthenticated,
+            user: null
         }
 
-        // console.log("App: initial state:", this.state);
-        // console.log("App: initial state:", props);
-        // console.log("---------------------------------");
+        console.log("App: initial state:", this.state);
+        console.log("App: initial state:", props);
+        console.log("---------------------------------");
     }
      
 
@@ -72,6 +73,21 @@ class App extends React.Component <any, any>{
         // socket.on('newPost', (newPost:{text: string, from: string})=>{
         //     console.log("New post arrived: ", newPost.text);
         // })
+        auth.knockknock(this.props.cookie).then(
+            (response:any)=>{
+            let token = response.data.token;
+            console.log("Token is valid, welcome: ", token);    
+            this.setState({isAuthenticated: true});
+            //return true;
+        },
+        function(response:any){
+            console.log("Token is not valid, back off: ", response);
+            this.setState({isAuthenticated: false});
+            //return false;
+        }).catch((reason)=>{
+            console.log("Authentication failed: ", reason);
+            this.setState({isAuthenticated: false});
+        });  
 
     }
 
@@ -83,49 +99,78 @@ class App extends React.Component <any, any>{
     login = (a:any, b:any)=>{
         //making request to server: /login
         auth.login(a, b).then(
-            (value:any)=>{
-                console.log("Authentication completed.", value);
+            (result:any)=>{
+                let {token , err, user} = result.data;
+                if(token){
+                    console.log("Authentication completed.", token);
+                } else {
+                    console.log("Authentication failed.", err);
+                }
+
+                console.log("RESULT: ", result);
+
                 this.setState({
-                    isAuthenticated: true
+                    isAuthenticated: token ? true : false,
+                    user: user
                 })
-            },
-            (value:any)=>{
-                console.log("Authentication failed.");
-                this.setState({
-                    isAuthenticated: false
-                })
+
+                console.log("Auth STATE: .", this.state.isAuthenticated);
+                console.log("User STATE: .", this.state);
             }
         ); 
     }
 
-    authenticate = async () => {
-        auth.knockknock(this.props.cookie).then(
-            (response:any)=>{
-            let token = response.data.token;
-            console.log("Token is valid, welcome: ", token);    
-            //this.setState(()=>({isAuthenticated: true}));
-            return true;
-        },
-        function(response:any){
-            console.log("Token is not valid, back off: ", response);
-            //this.setState(()=>({isAuthenticated: false}));
-            return false;
-        });  
+    logout = ()=>{
+        auth.logout();
     }
 
-      changeState = async (history:any)=>{
-        if(this.state.isAuthenticated){
-            history.push("/home");
-            //this.setState({isAuthenticated: true});
-            //return true;
-        } else {
-            history.push("/login");
-            //this.setState({isAuthenticated: false});
-            //return false;
-        }
-      }
+    // authenticate = async () => {
+    //     auth.knockknock(this.props.cookie).then(
+    //         (response:any)=>{
+    //         let token = response.data.token;
+    //         console.log("Token is valid, welcome: ", token);    
+    //         //this.setState(()=>({isAuthenticated: true}));
+    //         return true;
+    //     },
+    //     function(response:any){
+    //         console.log("Token is not valid, back off: ", response);
+    //         //this.setState(()=>({isAuthenticated: false}));
+    //         return false;
+    //     });  
+    // }
+
+    authenticate = async () => {
+        let result = await auth.knockknock(this.props.cookie);
+        //this.setState({isAuthenticated: result});
+        console.log("AUTH result: ", result)
+    }
+
+    // changeState = async (history:any)=>{
+    //     if(this.state.isAuthenticated){
+    //         history.push("/home");
+    //         //this.setState({isAuthenticated: true});
+    //         //return true;
+    //     } else {
+    //         history.push("/login");
+    //         //this.setState({isAuthenticated: false});
+    //         //return false;
+    //     }
+    // }
+
+    componentDidUpdate(){
+        console.log("UPDATE!!!!!!!");
+    }
+
+    // async componentWillMount(){
+    //     console.log("Chotto matte kudasai...");
+    //     await setTimeout(()=>{
+    //         console.log("There, I waited...");
+    //     }, 5000);
+    //     await console.log("Cool, thanks brah...");
+
+    // }
       
-      //{ "_id" : ObjectId("5d251411c54599a46a44ce67"), "email" : "qwe@zxc.com", "name" : "EL", "pw_hash" : "$2a$05$6LY5hQO0sAzIUxyYS7Un6O16XSbkp.bkLNhTLcNf9XVNuul.laVtK", "__v" : 0 }
+    //{ "_id" : ObjectId("5d251411c54599a46a44ce67"), "email" : "qwe@zxc.com", "name" : "EL", "pw_hash" : "$2a$05$6LY5hQO0sAzIUxyYS7Un6O16XSbkp.bkLNhTLcNf9XVNuul.laVtK", "__v" : 0 }
 
     render(){
         console.log("app:render...");
@@ -138,9 +183,13 @@ class App extends React.Component <any, any>{
             <div>
                 <HeaderMenu/>
                 <Switch>
+                    {/* <Route path="/logout" children={()=>{
+                        this.logout();
+                        return <Redirect to="/login"/>;
+                    }}></Route> */}
                     <Route path="/login" render={()=><Login loginHandler={this.login} />}></Route>
                     <Route path="/register" render={()=><Register/>}></Route>
-                    <Route path="/home" render={()=><Dashboard/>}></Route>
+                    <Route path="/home" render={()=><Dashboard user={this.state.user}/>}></Route>
                     <Route exact path="/" children={(props:any)=>{
                             // console.log("app:state: ", this.state);
                             // console.log("app:props: ", props);
@@ -150,7 +199,7 @@ class App extends React.Component <any, any>{
                             // setInterval(()=>{
                             //     props.history.push("/home");
                             // }, 5000)
-                            return this.state.isAuthenticated ? <Redirect to="/home"/> : <Redirect to="/login"/>;
+                            return this.state.user ? <Redirect to="/home"/> : <Redirect to="/login"/>;
                             // if(this.props.isAuthenticated){
                             //     props.history.push("/home");
                             // } else {
@@ -159,9 +208,6 @@ class App extends React.Component <any, any>{
                     
                             //this.changeState(props.history);
                     }}></Route>
-                    {/* (this.state.isAuthenticated) ? <Route path="/" render={()=><Dashboard/>} key={rNum}></Route> : <Route path="/" render={()=><Login/>} key={rNum}></Route> */}
-                    {/* (false) ? <Route path="/" component={Dashboard}></Route> : <Route path="/" component={Login}></Route> */}
-
                 </Switch>
             </div>
         </Router>

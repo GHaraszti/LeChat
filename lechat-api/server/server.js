@@ -114,22 +114,7 @@ app.use(function(req, res, next) {
 
 
 //App middleware
-app.get('/api/posts', (req, res) => {
 
-  Post.find().then((posts) => {
-    console.log(posts)
-    if(!posts) {
-      res.status(404).send("Posts could not be retrieved.");
-    } else {
-      res.status(200).json({
-        posts
-      });
-    }
-  }).catch((e) => {
-     res.status(400).send(e);
-  });
-  console.log("Test page");
-});
 
 const verifyUser = (token) => {
   if(token){
@@ -162,7 +147,6 @@ app.get('/auth/:token', (req, res, next)=>{
   if(!token){
     console.log("Token not defined\n");
     res.status(500).send("Not valid data.");
-    next();
   }
 
   //If token isn't valid
@@ -186,7 +170,8 @@ app.get('/auth/:token', (req, res, next)=>{
       console.log("User convos...", convos);
   
       res.status(200).json({
-        success: true
+        success: true,
+        user: user
       });  
     },
     (err)=>{
@@ -194,14 +179,13 @@ app.get('/auth/:token', (req, res, next)=>{
       res.status(401).json({success: false, error: 'Invalid token.'});
     }).catch((e) => {
       console.log("e: ", e)
-       res.status(400).send("Something went wrong");
+       res.status(400).json({success: false, error: "Something went wrong"});
     });
     console.log("Still working...");
   } else
   {
     console.log("Wrong password.\n");
-    res.status(400).send("Not valid credentials.");
-    next();
+    res.status(400).json({success: false, error: "Not valid credentials."});
   }
 
 });
@@ -221,42 +205,66 @@ app.post('/login', (req, res) => {
   console.log("Request body: ", req.body);
   console.log("Requesting submitted: ", email, password);
 
-  User.findOne({
-    email: email
-  }).then((user)=>{
-    console.log("User found: ", user);
-    if(user === null){
-      res.json(false);
-    }
+  User.findOne({email: email}).then(
 
-    bcrypt.compare(password, user.pw_hash, function(err, result){
-      if(result === true){
-        console.log("Welcome ", user.name);
-        let token = jwt.sign({email: user.email}, secret, {expiresIn: 60000});
+    (user)=>{
+      if(user){
 
-        //Give the user an updated token
-        user.save({token:token}).then(()=>{
-          console.log("User token updated.");
-        },
-        ()=>{
-          console.log("User token update failed."); 
-        });
-
-        res.json({
-           succes: true,
-           err: null,
-           token
-        });
-      } else{
-        console.log("Password doesn't match with hash");
-        res.status(401).json({
-          succes: false,
-          error: 'Entered password and hash do not match',
-          token: null
-        });
+        bcrypt.compare(password, user.pw_hash, function(err, result){
+          if(result === true){
+            console.log("Welcome ", user.name);
+            let token = jwt.sign({email: user.email}, secret, {expiresIn: 600000});
+    
+            // //Give the user an updated token
+            // user.save({token:token}).then(()=>{
+            //   console.log("User token updated.");
+            // },
+            // ()=>{
+            //   console.log("User token update failed."); 
+            // });
+    
+            res.status(200).json({
+               succes: true,
+               err: null,
+               token,
+               user: {
+                 email,
+                 name: user.name,
+                 convos: user.convos
+               }
+            });
+          } else{
+            console.log("Password doesn't match with hash");
+            res.status(401).json({
+              succes: false,
+              error: 'Entered password and hash do not match'
+            });
+          }
+        })
       }
+    
+    },
+    (reason)=>{
+      res.status(400).json({
+        succes: false,
+        error: "A user with that email cannot be found.",
+        token: null
+      }); 
+    }).catch(()=>{
+      res.status(500).json({
+        succes: false,
+        error: "Oops, something happened, gimme a sec...",
+        token: null
+      }); 
     })
-  })
+
+
+  // res.status(400).json({
+  //   succes: false,
+  //   error: "A user with that email cannot be found.",
+  //   token: null
+  // });
+
 });
 
 app.post('/users', (req, res)=>{
@@ -279,7 +287,6 @@ app.post('/users', (req, res)=>{
     });
   });
 });
-
 
 app.get('/users/:email', (req, res) =>{
   var email = req.params.email;
@@ -311,13 +318,14 @@ app.get('/users/:email', (req, res) =>{
   });
 });
 
-app.post('/api/posts/', (req, res) => {
-  var email = req.body.content.sentBy;
+app.post('/api/post/', (req, res) => {
+  var email = req.body.sentBy;
+  var convoID = req.body.convoID;
 
   const getThem = async () => {
     let user = await User.findOne({email: email});
     //Temp fixed convoID
-    let convo = await Convo.findById("5d36425fc092f1520b39a081");
+    let convo = await Convo.findById(convoID);
 
     console.log(email);
     if(!user && !convo) {
@@ -325,7 +333,7 @@ app.post('/api/posts/', (req, res) => {
     }
   
     var post = new Post({
-      text: req.body.content.text,
+      text: req.body.text,
       sentBy: user,
       convo: convo
     });
@@ -340,8 +348,30 @@ app.post('/api/posts/', (req, res) => {
   getThem();
 });
 
- 
-app.get('/posts/:userID', (req, res) =>{
+//GET all posts from one group/conversation
+app.get('/api/posts/:convoID', (req, res) => {
+  let id = req.params.convoID;
+
+  if(!id){
+    res.status(500).send("ConvoID not provided.");
+  }
+
+  Post.find({"convo": id}).then((posts) => {
+    console.log(posts)
+    if(!posts) {
+      res.status(404).send("Posts could not be retrieved.");
+    } else {
+      res.status(200).json({
+        posts
+      });
+    }
+  }).catch((e) => {
+     res.status(400).send(e);
+  });
+  console.log("Test page");
+});
+
+app.get('api/post/:userID', (req, res) =>{
   //Test user
   //{ "_id" : ObjectId("5d0bd7baa35a0b13f3bb2a89"), "email" : "someone@something.smg", "name" : "Lemoi", "__v" : 0 }
 
@@ -362,7 +392,7 @@ app.get('/posts/:userID', (req, res) =>{
   });
 });
 
-app.delete('api/posts/:postID', (req, res) => {
+app.delete('api/post/:postID', (req, res) => {
    var id = req.params.postID;
 
    if(!ObjectID.isValid(id)) {
@@ -455,10 +485,13 @@ app.route('/convos/:convoID?')
   })
 })////////////////////////////////////
 .post(function(req, res, next){
+
   if(req.body) {
+    var memberIDs = req.body.members.length ? req.body.members : [];
+
     var convo = new Convo({
       name: req.body.name || "",
-      members: req.body.members.length ? req.body.members : [],
+      members: [],
       isP2P: req.body.members == true && req.body.members.length == 2,
       createdAt: req.body.createdAt || new Date()  
     });
@@ -488,11 +521,11 @@ app.route('/convos/:convoID?')
     }
 
     var getAllMembers = async () => {
-      var users = [];
       var userQueue = [];
+      var users = [];
       
-      convo.members.forEach(async (element) => {
-            userQueue.push(getUserById(element.user).then((user)=>{
+      memberIDs.forEach(async (element) => {
+            userQueue.push(getUserById(element).then((user)=>{
               console.log("User: ", user);
       
               users.push(user);
@@ -577,6 +610,11 @@ app.route('/convos/:convoID?')
 //      res.status(400).send(e);
 //   });
 // });
+
+app.get('*', function(req, res){
+  console.log("No route found.");
+  //res.redirect("/");
+}); 
 
 
 app.listen(port, () => {
