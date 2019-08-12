@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Route, Link } from "react-router-dom";
+import { Route, Link, withRouter} from "react-router-dom";
 
 import {connect} from "react-redux";
 
@@ -87,10 +87,6 @@ class Dashboard extends React.Component <any, any>{
           }
         }
       });
-    }
-    
-    componentDidUpdate = ()=>{
-
     }
 
     render(){
@@ -343,3 +339,4 @@ class Dashboard extends React.Component <any, any>{
 
 // export default Dashboard;
 export default connect(mapStateToProps, mapDispatcherToProps)(Dashboard);
+// export default withRouter(connect(mapStateToProps, mapDispatcherToProps)(Dashboard))

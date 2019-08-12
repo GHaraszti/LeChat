@@ -7,6 +7,7 @@ import {
     Route,
     Switch,
     Redirect,
+    withRouter
   } from 'react-router-dom';
 // import * as IO from 'socket.io-client';
 
@@ -32,16 +33,190 @@ const fakeAuth = {
     }
 }
 
+
+
+
+
+
+
 // const socket = IO();
 
 import * as auth from "../utilities/authHelperFunctions" 
 
+
+// const Logger = (ComponentToProtect:any, loginHandler:any, routing:any)=>{
+//     return class extends React.Component <any, any, any>{
+//       constructor(props:any) {
+//         super(props);
+//         props = {
+//             ...this.props,
+//             loginHandler,
+//             routing
+//         }
+//         this.state = {
+//           loggedIn: false
+//         };
+//       }
+
+//       login = (a:any, b:any, routing:any)=>{
+//         //making request to server: /login
+//         auth.login(a, b).then(
+//             (result:any)=>{
+//                 
+//                 let {token , err, user} = result.data;
+//                 if(user){
+//                     
+
+
+//                     routing.history.push('/');
+
+//                     // this.setState({
+//                     //     isAuthenticated: true,
+//                     //     user: user
+//                     // })
+
+//                 } else {
+//                     
+//                 }
+
+//                 
+
+//                 
+//                 
+//             }
+//         ); 
+//     }
+
+  
+  
+//       render() {
+//         const { loggedIn } = this.state;
+//         
+
+//         if (loggedIn) {
+//           return <Redirect to="/" />;
+//         }
+//         return (
+//             <ComponentToProtect {...this.props} routing={this.props.routing} loginHandler= {this.login} />
+//         );
+//       }
+//     }
+//   }
+
+// const PrivateRoute = (Component: any, ...rest:any ) => (
+//     <Route {...rest} render={props => (
+//       rest.user ? (
+//         <Component {...props}/>
+//       ) : (
+//         <Redirect to={{
+//           pathname: '/login',
+//           state: { from: props.location }
+//         }}/>
+//       )
+//     )}/>
+// )
+const Container = (ComponentToProtect:any, u:any, cookie:any)=>{
+    
+
+    let CC = class extends React.Component <any, any, any>{
+      constructor(props:any) {
+        super(props);
+        let params = this.props;
+
+        console.log("CONSTRUCTOR: Container.");
+
+        props = {
+            ...this.props,
+            user : u ||  (params ? params.user : null),
+            cookie: cookie || window.document.cookie
+        };
+        this.state = {
+          loading: true,
+          redirect: false,
+          user: u,
+          cookie: cookie || window.document.cookie
+        };
+      }
+  
+      componentDidMount() {
+
+        auth.knockknock(cookie).then(
+            (response:any)=>{
+            console.log("KK: Container.", this.state, response);
+
+            // let user = response.data.user;
+            let user = this.state.user || response.data.user;
+            if(user){
+                console.log("KK: Container -> Welcome");
+
+                this.setState({ loading: false, redirect: false, user: user});
+            } else {
+                console.log("KK: Container -> Denied");
+
+                this.setState({ loading: false, redirect: true });
+            }
+        },
+        (response:any)=>{
+            console.log("KK: Container -> ERROR");
+
+            const error = new Error(response.error);
+            throw error;
+        }).catch((reason)=>{
+            console.log("KK: Container -> ERROR");
+
+            //this.setState({ loading: false, redirect: true });
+    });     
+    }
+
+    componentDidUpdate(){
+        // 
+    }
+
+    componentWillReceiveProps(nextProps:any){
+        
+    }
+  
+  
+      render() {
+        console.log("RENDER: Container.");
+
+        let params = this.props;
+        
+
+        const { loading, redirect } = this.state;
+        if (loading) {
+            console.log("loading: Container.");
+
+          return null;
+        }
+        if (redirect) {
+            console.log("redirecting: Container.");
+
+            return <Redirect to={{
+                pathname: "/login",
+                state:{
+                    from:"/"
+                }
+            }} />;
+            // return null;
+        }
+        console.log("returning component: Container.");
+
+        return (
+            <ComponentToProtect {...this.props} user= {this.state.user} />
+        );
+      }
+    }
+    return withRouter(CC);
+  }
+
 class App extends React.Component <any, any>{
     constructor(props:any){
         super(props);
-        // console.log("App: constr /////////////");
-        //console.log("Current token: ", auth.getToken(props.cookie));
-        // console.log("props: ", props.cookie);
+        // 
+        console.log("CONSTRUCTOR: App.");
+
+        // 
 
         // props = { 
         //     ...this.props,
@@ -51,71 +226,91 @@ class App extends React.Component <any, any>{
         //props.isAuthenticated = true;
         
         this.state = {
-            isAuthenticated: this.props.isAuthenticated,
+            isAuthenticated: false,
             user: null
         }
 
-        console.log("App: initial state:", this.state);
-        console.log("App: initial state:", props);
-        console.log("---------------------------------");
+        // 
+        // 
+        // 
     }
      
 
     async componentDidMount (){
         // socket.on('connect', () =>{
-        //     console.log('New user connected');
+        //     
         // });
 
         // socket.on('disconnect', () =>{
-        //     console.log('Disconected from server');
+        //     
         // });
 
         // socket.on('newPost', (newPost:{text: string, from: string})=>{
-        //     console.log("New post arrived: ", newPost.text);
+        //     
         // })
-        auth.knockknock(this.props.cookie).then(
-            (response:any)=>{
-            let token = response.data.token;
-            console.log("Token is valid, welcome: ", token);    
-            this.setState({isAuthenticated: true});
-            //return true;
-        },
-        function(response:any){
-            console.log("Token is not valid, back off: ", response);
-            this.setState({isAuthenticated: false});
-            //return false;
-        }).catch((reason)=>{
-            console.log("Authentication failed: ", reason);
-            this.setState({isAuthenticated: false});
-        });  
+        // auth.knockknock(this.props.cookie).then(
+        //     (response:any)=>{
+        //     let token = response.data.token;
+        //     
+        //     this.setState({isAuthenticated: true});
+        //     //return true;
+        // },
+        // function(response:any){
+        //     
+        //     this.setState({isAuthenticated: false});
+        //     //return false;
+        // }).catch((reason)=>{
+        //     
+        //     this.setState({isAuthenticated: false});
+        // });  
 
     }
 
     // componentDidUpdate = () => {
-    //     console.log("Component did updated.", this.state);
+    //     
 
     // }
 
-    login = (a:any, b:any)=>{
+    login = (a:any, b:any, routing:any)=>{
         //making request to server: /login
         auth.login(a, b).then(
             (result:any)=>{
+                console.log("logging: App");
+
                 let {token , err, user} = result.data;
-                if(token){
-                    console.log("Authentication completed.", token);
+                if(user){
+                    console.log("logging: App-> SUCCESS");
+
+
+
+                    // setTimeout(routing.history.push('/'), 5000);
+                    this.setState({
+                        isAuthenticated: true,
+                        user: user
+                    })
+                    // 
+                    // 
+
+
+                    //routing.history.push('/');
+                    //this.props.history.push('/');
+                    // this.setState({
+                    //     isAuthenticated: true,
+                    //     user: user
+                    // })
+
+                    // return <Redirect to="/"/>
+
                 } else {
-                    console.log("Authentication failed.", err);
+                    console.log("logging: App-> FAILURE");
+
                 }
 
-                console.log("RESULT: ", result);
+                // 
 
-                this.setState({
-                    isAuthenticated: token ? true : false,
-                    user: user
-                })
+                // 
+                // 
 
-                console.log("Auth STATE: .", this.state.isAuthenticated);
-                console.log("User STATE: .", this.state);
             }
         ); 
     }
@@ -124,95 +319,124 @@ class App extends React.Component <any, any>{
         auth.logout();
     }
 
-    // authenticate = async () => {
-    //     auth.knockknock(this.props.cookie).then(
-    //         (response:any)=>{
-    //         let token = response.data.token;
-    //         console.log("Token is valid, welcome: ", token);    
-    //         //this.setState(()=>({isAuthenticated: true}));
-    //         return true;
-    //     },
-    //     function(response:any){
-    //         console.log("Token is not valid, back off: ", response);
-    //         //this.setState(()=>({isAuthenticated: false}));
-    //         return false;
-    //     });  
-    // }
-
     authenticate = async () => {
         let result = await auth.knockknock(this.props.cookie);
         //this.setState({isAuthenticated: result});
-        console.log("AUTH result: ", result)
+        
     }
 
-    // changeState = async (history:any)=>{
-    //     if(this.state.isAuthenticated){
-    //         history.push("/home");
-    //         //this.setState({isAuthenticated: true});
-    //         //return true;
-    //     } else {
-    //         history.push("/login");
-    //         //this.setState({isAuthenticated: false});
-    //         //return false;
-    //     }
-    // }
+
 
     componentDidUpdate(){
-        console.log("UPDATE!!!!!!!");
+        // 
+        
+        
+        if(this.state.user && this.props.location.pathname == "/login"){
+            this.props.history.push("/");
+        }
     }
 
-    // async componentWillMount(){
-    //     console.log("Chotto matte kudasai...");
-    //     await setTimeout(()=>{
-    //         console.log("There, I waited...");
-    //     }, 5000);
-    //     await console.log("Cool, thanks brah...");
+    componentWillReceiveProps(nextProps:any){
+        
+    }
 
-    // }
-      
     //{ "_id" : ObjectId("5d251411c54599a46a44ce67"), "email" : "qwe@zxc.com", "name" : "EL", "pw_hash" : "$2a$05$6LY5hQO0sAzIUxyYS7Un6O16XSbkp.bkLNhTLcNf9XVNuul.laVtK", "__v" : 0 }
 
     render(){
-        console.log("app:render...");
+        console.log("RENDER: App.");
+
         let rNum = Math.random();
-        // console.log("App:render:state: ", this.state);
-        // console.log("---------------------------------");
+        // 
+        // 
         //this.state = {isAuthenticated:true};
 
-        let html = <Router>
-            <div>
-                <HeaderMenu/>
-                <Switch>
-                    {/* <Route path="/logout" children={()=>{
-                        this.logout();
-                        return <Redirect to="/login"/>;
-                    }}></Route> */}
-                    <Route path="/login" render={()=><Login loginHandler={this.login} />}></Route>
-                    <Route path="/register" render={()=><Register/>}></Route>
-                    <Route path="/home" render={()=><Dashboard user={this.state.user}/>}></Route>
-                    <Route exact path="/" children={(props:any)=>{
-                            // console.log("app:state: ", this.state);
-                            // console.log("app:props: ", props);
-                            // console.log("app:path: ", props.location.pathname);
-                            // console.log("---------------------------------");
-    
-                            // setInterval(()=>{
-                            //     props.history.push("/home");
-                            // }, 5000)
-                            return this.state.user ? <Redirect to="/home"/> : <Redirect to="/login"/>;
-                            // if(this.props.isAuthenticated){
-                            //     props.history.push("/home");
-                            // } else {
-                            //     props.history.push("/login");
-                            // }
-                    
-                            //this.changeState(props.history);
-                    }}></Route>
-                </Switch>
-            </div>
-        </Router>
+        let html =             
+        <div>
+        <HeaderMenu/>
+        <Switch>
+            {/* <Route path="/logout" children={()=>{
+                this.logout();
+                return <Redirect to="/login"/>;
+            }}></Route> */} 
 
-        console.log("Final html: ", html);
+            {/* <Route exact path="/login" render={(props)=><Login loginHandler={this.login} routing={props}/>}></Route> */}
+            {/* <Route exact path="/login" render={(props:any)=>{
+                    
+                    return Logger(Login, this.props.login, props);
+                }
+            }/> */}
+            {/* <Route exact path="/login" render={(props:any)=><Login loginHandler={this.login} routing={{}}/>}/> */}
+
+
+
+
+            <Route exact path="/login" children={(props:any)=>{
+                    
+                    console.log("ROUTE: /login.");
+
+                    // return (this.state.user) ? <Redirect to="/"/> : <Login loginHandler={this.login} routing={props}/>
+                    if(this.state.user){
+                        console.log("ROUTE: /login. ->USER AVAILABLE -> Redirecting to /");
+
+                        // props.history.push("/lol")
+                        return <Redirect to={{
+                            pathname: "/",
+                            state: {
+                                user: this.state.user
+                            }
+                        }}/>
+                        // return <Redirect to="/lol"/>;
+                        // props.history.push({
+                        //     pathName: '/',
+                        //     state: {
+                        //         user: this.state.user,
+
+                        //     }
+                        // });
+
+                    } else {
+                        console.log("ROUTE: /login. ->NO USER -> Return <Login/>");
+
+                        // props.history.push("/login")
+                        
+                        return <Login loginHandler={this.login} routing={props}/>
+                    }
+                    // return <Login loginHandler={this.login} routing={props}/>
+
+                }
+            }/>
+            <Route path="lol" render={(props:any)=>{
+                        console.log("ROUTE: /lol.");
+
+                
+                return <div>Aleluya!!!</div>
+            }}
+            />
+            
+            {/* <Route path="/login" render={(props:any)=>{
+
+                    return this.state.user ? <Redirect to="/"/> : <Login loginHandler={this.login} />
+            }}></Route>
+            <Route path="/register" render={()=><Register/>}></Route> */}
+            {/* <Route path="/home" component={()=><Dashboard user={this.state.user}/>}></Route>
+            <Route exact path="/" component={(props:any)=>{
+                    
+                    return this.state.user ? <Redirect to="/home"/> : <Redirect to="/login"/>;
+
+            }}></Route> */}
+            <Route exact path="/" component={(props:any)=>{
+                
+                console.log("ROUTE: /.");
+
+                let Component = Container(Dashboard, this.state.user, this.props.cookie);
+                return <Component/>;
+            }
+            } />
+
+        </Switch>
+        </div>
+
+        
 
         return html;
     }
@@ -229,10 +453,12 @@ class App extends React.Component <any, any>{
 // };
 
 // const mapStateToProps = (state:any, ownProps:any) => {
-//   console.log("Store updated!!! state: ", state);
+//   
 //   return {state,
 //   ownProps};
 // };
 
-// export default connect(mapStateToProps, mapDispatcherToProps)(App);
-export default App;
+// export default withRouter(connect(null, null)(App));
+export default withRouter(App)
+
+// export default App;

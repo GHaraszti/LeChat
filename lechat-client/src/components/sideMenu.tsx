@@ -9,7 +9,7 @@ class SideMenu extends React.Component <any, any, any>{
         console.log("SideMenu: props: ", this.props);
         this.state = {
           convoList : this.props.convos || [],
-          convoFocus : null
+          convoFocus : this.props.convos ? this.props.convos[0]._id : null
         }
     }
 

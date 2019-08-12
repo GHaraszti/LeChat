@@ -10,8 +10,16 @@ import reducer from "./reducers";
 
 import { createStore, applyMiddleware} from "redux";
 import { Provider } from "react-redux";
-import createSagaMiddleware from 'redux-saga';
+import {
+    BrowserRouter as Router,
+    Link,
+    Route,
+    Switch,
+    Redirect,
+    withRouter
+  } from 'react-router-dom';
 
+import createSagaMiddleware from 'redux-saga';
 import rootSaga from './sagas';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -32,9 +40,12 @@ console.log("index:cookie: ///////////", cookie);
 console.log("Store", store.getState());
 
 ReactDOM.render(
-    <Provider store={store}>
-        <App cookie={cookie} isAuthenticated={false}/> 
-    </Provider>,
+    <Router>
+        <Provider store={store}>
+            <App cookie={cookie} isAuthenticated={false}/> 
+        </Provider>
+    </Router>
+,
     document.getElementById("example")
 );
 

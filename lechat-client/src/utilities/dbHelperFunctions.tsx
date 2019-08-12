@@ -7,7 +7,8 @@ const fetchPosts = (convoID:string) =>{
     console.log("????????????????:", getToken(window.document.cookie));
     console.log("fetching comments for convo: ", convoID);
     return axios.get(
-        url + '/api/posts/' + convoID
+        url + '/api/posts/' + convoID,
+        {withCredentials: true}
     ).then(
         function(response:any){
         let list = response.data.posts;
@@ -25,7 +26,8 @@ const fetchPosts = (convoID:string) =>{
 const addPost = (post:object) => {
     return axios.post(
         url + '/api/post',
-        {...post}
+        {...post},
+        {withCredentials: true}
     ).then(
         function(response:any){
             return {success: true};

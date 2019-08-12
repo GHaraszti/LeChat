@@ -4,6 +4,7 @@ const path = require('path');
 const _ = require('lodash');
 
 const express = require('express');
+const cors = require('cors');
 const {ObjectID} = require('mongodb');
 const bodyParser = require('body-parser');
 const IO = require('socket.io');
@@ -44,48 +45,66 @@ const validEmail = function (email){
 const getConvos = function(email){
   if(!email || !validEmail(email)) return null;
   
-  let user = User.findOne({email: email});
-
-  if(user){
-    let convos = Convo.find({user: user._id})
-  }
-
-  return convos;
+  let user = User.findOne({email: email}).then((user)=>{
+    if(user){
+      let convos = Convo.find({members: {user: user._id}});
+      return convos;
+    }
+  }).then((convos)=>{
+    return convos;
+  })
 }
 
 //Middleware
 app.use(bodyParser.json());
 
+//CORS able
+// app.use(function(req, res, next) {
+//   res.header("Access-Control-Allow-Origin", "*");
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//   next();
+// });
+
+app.use(
+  cors({credentials: true, origin: 'http://localhost:8080'})
+);
+
 app.use(function(req, res, next){
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    const token = req.headers.cookie.split("; ")[0].split("=")[1];
     jwt.verify(token, secret, function(err, payload){
       if(payload){
         console.log("Hello friend.");
-        user.findOne({email: payload.email}).then(
+        User.findOne({email: payload.email}).then(
           (doc)=>{
             req.user = doc;
             next();
           }
         )
+      } else {
+        // res.status(401).json({
+        //   redirect: true
+        // })
+        throw new Error(res.error);
       }
       console.log("Sorry. I don't remember you.");
     })
   } catch(e){
     console.log("Not authenticated.");
-    req.user = "[NO USER]";
-    next();
+
+    //These routes are allowed to proceed without authentication
+    if(req.path == ("/login/" || "/register/")){
+      req.user = null;
+      next();
+    } else {
+      res.status(401).json({
+        redirect: true
+      })
+    }
   }
 })
 
 app.use(express.static(__dirname));
-
-//CORS able
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
 
 // //Token verification
 // app.use((req, res, next)=>{
@@ -146,7 +165,7 @@ app.get('/auth/:token', (req, res, next)=>{
   //If for some reason client side validation fails and sends no token
   if(!token){
     console.log("Token not defined\n");
-    res.status(500).send("Not valid data.");
+    res.status(500).json({success: false});
   }
 
   //If token isn't valid
@@ -166,7 +185,11 @@ app.get('/auth/:token', (req, res, next)=>{
       console.log("User: ", user);
       
 
-      let convos = getConvos();
+      // let convos = getConvos(email);
+      let convos = user.convos.map((convo)=>{
+        return convo;
+      });
+
       console.log("User convos...", convos);
   
       res.status(200).json({
@@ -197,7 +220,7 @@ app.post('/login', (req, res) => {
 
   if(!validEmail(email)) {
     res.status(401).json({
-      succes: false,
+      success: false,
       error: 'Invalid email'
     });
   }
@@ -224,7 +247,7 @@ app.post('/login', (req, res) => {
             // });
     
             res.status(200).json({
-               succes: true,
+               success: true,
                err: null,
                token,
                user: {
@@ -236,7 +259,7 @@ app.post('/login', (req, res) => {
           } else{
             console.log("Password doesn't match with hash");
             res.status(401).json({
-              succes: false,
+              success: false,
               error: 'Entered password and hash do not match'
             });
           }
@@ -246,13 +269,13 @@ app.post('/login', (req, res) => {
     },
     (reason)=>{
       res.status(400).json({
-        succes: false,
+        success: false,
         error: "A user with that email cannot be found.",
         token: null
       }); 
     }).catch(()=>{
       res.status(500).json({
-        succes: false,
+        success: false,
         error: "Oops, something happened, gimme a sec...",
         token: null
       }); 
@@ -260,7 +283,7 @@ app.post('/login', (req, res) => {
 
 
   // res.status(400).json({
-  //   succes: false,
+  //   success: false,
   //   error: "A user with that email cannot be found.",
   //   token: null
   // });

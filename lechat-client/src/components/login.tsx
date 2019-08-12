@@ -1,13 +1,30 @@
 import * as React from "react";
-import {Link} from "react-router-dom";
+import {Link, withRouter} from "react-router-dom";
 import * as auth from "../utilities/authHelperFunctions" 
 import { AnySoaRecord } from "dns";
+import { connect } from "net";
+
+const mapDispatcherToProps = {
+  // dispatching plain actions
+  getComments: (convoID:string) => ({ type: 'FETCH_COMMENTS', 
+      content: {
+          convoID
+      }
+  })
+};
+
+const mapStateToProps = (state:any, ownProps:any) => {
+console.log("Store updated!!! dashboard: ", state, ownProps);
+// this.state.socket.emit("newPost");
+return {state,
+ownProps};
+};
 
 class Login extends React.Component<any, any>{
 
   constructor(props:any){
       super(props);
-      console.log("Login: constr//////////")
+      console.log("Login: properties: ", this.props)
       this.state = {
         userEmail: "",
         userPassword: ""
@@ -24,7 +41,7 @@ class Login extends React.Component<any, any>{
 
     postLogin = async (event: any) => {
         //alert(this.props);
-        var success = this.props.loginHandler(this.state.userEmail, this.state.userPassword);
+        var success = this.props.loginHandler(this.state.userEmail, this.state.userPassword, this.props.routing);
         console.log("---------------------------------");
         console.log("Logging to: ", this.state.userEmail, this.state.userPassword);
 
@@ -49,7 +66,7 @@ class Login extends React.Component<any, any>{
     }
 
       render(){
-        console.log("login:render...");
+        console.log("login:render... ", this.props);
         console.log("---------------------------------");
 
         const html = (
@@ -96,5 +113,5 @@ class Login extends React.Component<any, any>{
 };
 
 
-
+// export default withRouter(Login)
 export default Login;

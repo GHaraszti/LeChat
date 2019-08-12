@@ -3,8 +3,8 @@ import axios from "axios";
 const apiURL = "http://localhost:3000";
 const knockknock = async (cookies: string) => {
 
-    const token = await getToken(cookies);
-    console.log("KK:token: ", token);
+    const token = getToken(cookies);
+    // console.log("KK:token: ", token);
 
     if(token){
         return axios({
@@ -12,12 +12,13 @@ const knockknock = async (cookies: string) => {
             url:`${apiURL}/auth/${token}`,
             validateStatus: function (status) {
                 return status >= 200 && status < 300; // default
-            }
+            },
+            withCredentials: true
         }
         );
     }
 
-    return Promise.reject(new Error("Token was not provided")).then(null, ()=> false);
+    return Promise.reject(new Error("Token was not provided")).then(null, ()=> ({data: {success: false}}));
 };
 
 // const knockknock = async (cookies: string) => {
@@ -58,7 +59,7 @@ const login = async (email:any, password:any) =>{
     ).then(
         function(response:any){
         let token = response.data.token;
-        //console.log("Login: token response: ", response.data);
+        // console.log("Login helping function: request response data: ", response.data);
 
         setToken(token, 60000);
 
@@ -67,7 +68,7 @@ const login = async (email:any, password:any) =>{
         function(reason:any){
 
         //console.log(response);
-        return {error: reason};
+        return {data: {error: reason}};
     });
 }
 
@@ -81,6 +82,7 @@ const setToken = (token:string, exp:number) => {
         d.setTime(d.getTime() + (exp));
         var expires = "expires="+ d.toUTCString();
         document.cookie = "authToken=" + token + ";" + expires + ";path=/";
+
         //console.log("setToken=>Cookie: ", document.cookie);
     }
 }
@@ -91,7 +93,7 @@ const tokenIsValid = (token:string)=>{
 }
 
 const getToken = (cookie:string) => {
-    //console.log("getToken=>Cookie: ", cookie)
+    // console.log("getToken=>Cookie: ", cookie)
     let token = ""; 
     
     cookie.split(';').forEach((value:string, index:number, array:[])=>{
@@ -107,7 +109,7 @@ const getToken = (cookie:string) => {
         return "";
     }
     
-    console.log("getToken: Token returned: ", token)
+    // console.log("getToken: Token returned: ", token)
     return token;
 }
 

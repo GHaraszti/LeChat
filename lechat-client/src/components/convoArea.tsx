@@ -4,6 +4,10 @@ import * as IO from "socket.io-client";
 // import {fetchCommentsActionCreator} from "../reducers/comments";
 import {connect} from "react-redux";
 
+import {
+    withRouter
+  } from 'react-router-dom';
+
 //Components
 import PostBox from "./postBox";
 import Post from "./post";
@@ -126,9 +130,9 @@ class ConvoArea extends React.Component<any, any, any>{
     //     this.props.state.comments = ;
     // }
 
-    componentWillReceiveProps = ()=>{
-        console.log("Will receive props: ", this.props.state);
-    }
+    // componentWillReceiveProps = ()=>{
+    //     console.log("Will receive props: ", this.props.state);
+    // }
 
     render(){
         //const messages = this.props.messages.comments.comments;
@@ -188,3 +192,4 @@ class ConvoArea extends React.Component<any, any, any>{
 //   })(Movies)
 
 export default connect(mapStateToProps, mapDispatcherToProps)(ConvoArea);
+// export default withRouter(connect(mapStateToProps, mapDispatcherToProps)(ConvoArea));
