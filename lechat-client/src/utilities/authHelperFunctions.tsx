@@ -61,7 +61,7 @@ const login = async (email:any, password:any) =>{
         let token = response.data.token;
         // console.log("Login helping function: request response data: ", response.data);
 
-        setToken(token, 60000);
+        setToken(token, 3600000);
 
         return response;
     },

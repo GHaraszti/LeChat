@@ -1,45 +1,22 @@
 import {put, takeEvery, all, fork} from 'redux-saga/effects';
-import {fetchPosts, addPost} from "../utilities/dbHelperFunctions";
+import {fetchPosts, addPost, fetchUser, addConvo} from "../utilities/dbHelperFunctions";
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
-function* incrementAsync(){
-    console.log('Init: inc\n');
-    yield delay(1000);
-    console.log('Delayed: inc\n');
-    yield put({type: 'INCREMENT'});
-}
-
-function* watchIncrementAsync(){
-    yield takeEvery('INCREMENT_ASYNC', incrementAsync);
-}
-
-// function* fetchComments(){
-//     console.log("Fetching comments...");
-//     yield delay(1000);
-//     // yield [
-//     //     {username: "Pepe", text: "Hey Juanita, ontas"},
-//     //     {username: "Juanita", text: "**Visto**"},
-//     // ];
-//     let comments = [
-//             {username: "Pepe", text: "Hey Juanita, ontas"},
-//             {username: "Juanita", text: "**Visto**"},
-//         ];
-//     yield put({type: 'FETCH_COMMENTS', content: comments });
-// }
-
-// function* fetchDBPosts(){
-//     let fetched = yield fetchPosts();
-//     yield put({type: 'FETCH_COMMENTS', content: fetched.list });
-// }
-
-
 
 function* fetchDBPosts(){
     yield takeEvery('FETCH_COMMENTS', function*(action:any){
         console.log("SAGAS: fetching posts for convo: ", action)
         let fetched = yield fetchPosts(action.content.convoID);
         yield put({type: 'COMMENTS_RECEIVED', content: fetched.list });
+    })
+}
+
+function* fetchDBUser(){
+    yield takeEvery('FETCH_USER', function*(action:any){
+        console.log("SAGAS: fetching user with email: ", action)
+        let fetched = yield fetchUser(action.content.email);
+        console.log("Fetched data: ", fetched);
+        yield put({type: 'USER_RECEIVED', content: fetched.user });
     })
 }
 
@@ -54,6 +31,20 @@ function* addDBPost(){
         //yield console.log("SOCKET: ", action.socket);
         yield action.socket.emit("broadcastPost", {convoID: action.content.post.convoID});
         //yield put({type: "BROADCAST_COMMENT", socket: action.socket})
+    });
+}
+
+function* addDBConvo(){
+    yield takeEvery('ADD_CONVO', function* (action:any){
+        console.log("SAGAS[addDBConvo] action content: ", action.content);
+        let payload = yield addConvo(action.content.convo);
+
+        //let fetched = yield fetchPosts(action.payload.convoID);
+
+        // yield put({type: 'FETCH_COMMENTS', content: {convoID: action.content.post.convoID} });
+        // //yield console.log("SOCKET: ", action.socket);
+        // yield action.socket.emit("broadcastPost", {convoID: action.content.post.convoID});
+        // //yield put({type: "BROADCAST_COMMENT", socket: action.socket})
     });
 }
 
@@ -73,6 +64,14 @@ function* newPost(){
     });
 }
 
+function* memberAdded(){
+    yield takeEvery("MEMBER_ADDED", function* (action:any){
+        console.log("SAGAS member added to list");
+        //yield delay(2000);
+        yield put({type: 'UPDATE_MEMBER_LIST'});
+    });
+}
+
 function* watchNewComments(){
     console.log("SAGAS New comment detected.");
     yield takeEvery('NEW_COMMENT', fetchDBPosts);
@@ -83,7 +82,9 @@ export default function* rootSaga(){
         //watchIncrementAsync(),
         // watchNewComments(),
         fetchDBPosts(),
+        fetchDBUser(),
         addDBPost(),
+        addDBConvo(),
         newPost(),
         broadcastPost()
     ])

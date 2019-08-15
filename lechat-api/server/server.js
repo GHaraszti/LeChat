@@ -236,7 +236,7 @@ app.post('/login', (req, res) => {
         bcrypt.compare(password, user.pw_hash, function(err, result){
           if(result === true){
             console.log("Welcome ", user.name);
-            let token = jwt.sign({email: user.email}, secret, {expiresIn: 600000});
+            let token = jwt.sign({email: user.email}, secret, {expiresIn: 3600000});
     
             // //Give the user an updated token
             // user.save({token:token}).then(()=>{
@@ -311,7 +311,7 @@ app.post('/users', (req, res)=>{
   });
 });
 
-app.get('/users/:email', (req, res) =>{
+app.get('/api/user/:email', (req, res) =>{
   var email = req.params.email;
 
   // if(!ObjectID.isValid(id)) {
@@ -331,11 +331,11 @@ app.get('/users/:email', (req, res) =>{
   }
   console.log(email);
 
-  User.find({email: email}).then((user) => {
+  User.findOne({email: email}).then((user) => {
     if(!user) {
       return res.status(404).send();
     }
-    res.send({user});
+    res.status(200).json({name: user.name, email: user.email, _id: user.id});
   }).catch((e) => {
      res.status(400).send();
   });
@@ -497,7 +497,7 @@ app.param('convoID', function(req, res, next, id){
 // { "_id" : ObjectId("5d3250f5ecc08368d02a951f"), "email" : "ewq@asd.com", "name" : "Letoi", "pw_hash" : "$2a$05$pNf57iEUuQ7dpyR3scKo1.tScjzfDLS6AFDpDUXEgfDUOJG1wR.d.", "convos" : [ ], "__v" : 0 }
 // { "_id" : ObjectId("5d3250ffecc08368d02a9520"), "email" : "qwe@asd.com", "name" : "Lemoi", "pw_hash" : "$2a$05$ocKaduiDcyihF57EtiRuwuXLujqylxzeytAgzfDXzYImNBCKspqsm", "convos" : [ ], "__v" : 0 }
 
-app.route('/convos/:convoID?')
+app.route('/api/convos/:convoID?')
 .get(function(req, res, next){
   console.log("GET convos", req.convo);
 

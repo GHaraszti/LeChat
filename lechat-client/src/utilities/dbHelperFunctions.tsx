@@ -38,7 +38,43 @@ const addPost = (post:object) => {
     )
 }
 
+const fetchUser = (email:string) =>{
+    console.log("fetching comments for convo: ", email);
+    return axios.get(
+        url + '/api/user/' + email,
+        {withCredentials: true}
+    ).then(
+        function(response:any){
+        let user = response.data;
+        console.log("GET Posts: response: ", user);
+
+        return {user, success: true};
+    },
+        function(response:any){
+
+        console.log("FAIL: Coud not retrieve posts");
+        return {success: false};
+    });
+}
+
+const addConvo = (convo:object) => {
+    return axios.post(
+        url + '/api/convos/',
+        {...convo},
+        {withCredentials: true}
+    ).then(
+        function(response:any){
+            return {success: true};
+        },
+        function(){
+            return {success: false}
+        }
+    )
+}
+
 export {
     fetchPosts,
-    addPost
+    addPost,
+    fetchUser,
+    addConvo
 }
