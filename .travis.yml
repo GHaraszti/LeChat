@@ -5,11 +5,6 @@ services:
  - docker
 
 before_install:
- - docker build -t gharaszti/react-test -f ./lechat-client/Dockerfile.dev
-
-script:
- - docker run -e CI=true gharaszti/react-test npm test
-after_success:
  - docker build -t gharaszti/lechat-client ./client
  - docker build -t gharaszti/lechat-api ./api
  - docker build -t gharaszti/lechat-client ./nginx
