@@ -5,9 +5,17 @@ services:
  - docker
 
 before_install:
- - docker build -t gharaszti/lechat-client ./client
- - docker build -t gharaszti/lechat-api ./api
- - docker build -t gharaszti/lechat-client ./nginx
+ - docker build -t gharaszti/lechat-client ./lechat-client
+ - docker build -t gharaszti/lechat-api ./lechat-api
+ - docker build -t gharaszti/lechat-nginx ./lechat-nginx
+
+script:
+ - docker run gharaszti/lechat-client
+ - docker run gharaszti/lechat-api
+ - docker run gharaszti/lechat-nginx
+
+
+after_success:
 #Login into docker hub
  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
 #Push those images to repositories
