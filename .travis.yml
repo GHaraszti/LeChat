@@ -1,0 +1,19 @@
+sudo: required
+services:
+ - docker
+
+before_install:
+ - docker build -t gharaszti/react-test -f ./lechat-client/Dockerfile.dev
+
+script:
+ - docker run -e CI=true USERNAME/react-test npm test
+after_success:
+ - docker build -t gharaszti/lechat-client ./client
+ - docker build -t gharaszti/lechat-api ./api
+ - docker build -t gharaszti/lechat-client ./nginx
+#Login into docker hub
+ - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+#Push those images to repositories
+ - docker push gharaszti/lechat-client
+ - docker push gharaszti/lechat-api
+ - docker push gharaszti/lechat-nginx
