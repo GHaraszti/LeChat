@@ -8,7 +8,7 @@ before_install:
  - docker build -t gharaszti/react-test -f ./lechat-client/Dockerfile.dev
 
 script:
- - docker run -e CI=true USERNAME/react-test npm test
+ - docker run -e CI=true gharaszti/react-test npm test
 after_success:
  - docker build -t gharaszti/lechat-client ./client
  - docker build -t gharaszti/lechat-api ./api
