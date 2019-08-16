@@ -4,16 +4,10 @@ node_js: lts/*
 services:
  - docker
 
-before_install:
+script:
  - docker build -t gharaszti/lechat-client ./lechat-client
  - docker build -t gharaszti/lechat-api ./lechat-api
  - docker build -t gharaszti/lechat-nginx ./lechat-nginx -f ./lechat-nginx/Dockerfile.dev
-
-script:
- - docker run gharaszti/lechat-client
- - docker run gharaszti/lechat-api
- - docker run gharaszti/lechat-nginx
-
 
 after_success:
 #Login into docker hub
