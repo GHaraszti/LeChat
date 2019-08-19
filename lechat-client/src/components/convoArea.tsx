@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as IO from "socket.io-client";
 // //Reducers
 // import {fetchCommentsActionCreator} from "../reducers/comments";
 import {connect} from "react-redux";
@@ -12,9 +11,6 @@ import {
 import PostBox from "./postBox";
 import Post from "./post";
 
-const socket = IO();
-
-
 const mapDispatcherToProps = {
     // dispatching plain actions
     getComments: (convoID:string) => ({ type: 'FETCH_COMMENTS', 
@@ -22,7 +18,7 @@ const mapDispatcherToProps = {
             convoID
         }
     }),
-    addComment: (comment:any) => ({type: 'ADD_COMMENT',
+    addComment: (comment:any, socket:any) => ({type: 'ADD_COMMENT',
         content: {
             post: comment
         },
@@ -56,7 +52,7 @@ class ConvoArea extends React.Component<any, any, any>{
         console.log("ConvoArea:properties: ", props);
 
         this.state = {
-            socket: socket
+            convos: this.props.user.convos
         }; 
     }
 
@@ -66,12 +62,13 @@ class ConvoArea extends React.Component<any, any, any>{
 
     componentDidMount (){
         console.log("Did mount?");
-        const s = this.state.socket;
+
+        const s = this.props.socket;
 
         s.on('connect', () =>{
             console.log('New user on convo: ', this.props.user.convos);
 
-            socket.emit("listen");
+            s.emit("listen");
             //socket.emit('join', {convos: this.props.user.convos});
             
         });
@@ -86,7 +83,7 @@ class ConvoArea extends React.Component<any, any, any>{
         
         s.on('disconnect', () =>{
             console.log('Disconected from server');
-            socket.removeAllListeners();
+            s.removeAllListeners();
         });
         
         s.on('newPost', async ()=>{
@@ -97,10 +94,13 @@ class ConvoArea extends React.Component<any, any, any>{
             // this.props.addComment({sentBy: "qwe@asd.com", text: newPost.text, convo: "5d36425fc092f1520b39a081"});
         })
 
-        socket.emit('joinRooms', this.props.user.convos);
-
-        //Temp fixed ID
-        this.props.getComments(this.props.convoID);
+        if(this.state.convos.length > 0){
+            s.emit('joinRooms', this.props.user.convos);
+        }
+        
+        if(this.props.convoID){
+            this.props.getComments(this.props.convoID);
+        }
     }
 
     // componentDidUpdate(){
@@ -117,7 +117,7 @@ class ConvoArea extends React.Component<any, any, any>{
         //await         console.log("Before dispatch: ", socket);
         // this.setState(this.state.messages);
         newMessage.convoID = this.props.convoID;
-        await this.props.addComment(newMessage);
+        await this.props.addComment(newMessage, this.props.socket);
         await this.props.newComment(this.props.convoID);
         // this.updateDState({focus:{
         //     convo:{

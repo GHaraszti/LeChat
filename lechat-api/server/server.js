@@ -71,7 +71,10 @@ app.use(
 
 app.use(function(req, res, next){
   try {
-    const token = req.headers.cookie.split("; ")[0].split("=")[1];
+    const pattern = /authToken=(.*?)\;|authToken=(\S*)\b/gm;
+
+    const matches = pattern.exec(req.headers.cookie);
+    const token = matches[1] || matches[2];
     jwt.verify(token, secret, function(err, payload){
       if(payload){
         console.log("Hello friend.");
@@ -93,7 +96,7 @@ app.use(function(req, res, next){
     console.log("Not authenticated.");
 
     //These routes are allowed to proceed without authentication
-    if(req.path == ("/login/" || "/register/")){
+    if(req.path == "/login/" || req.path == "/api/users/"){
       req.user = null;
       next();
     } else {
@@ -290,7 +293,7 @@ app.post('/login', (req, res) => {
 
 });
 
-app.post('/users', (req, res)=>{
+app.post('/api/users', (req, res)=>{
   //email validation
   if(false){
     return res.status(404).send();
@@ -547,23 +550,28 @@ app.route('/api/convos/:convoID?')
       var userQueue = [];
       var users = [];
       
-      memberIDs.forEach(async (element) => {
+      memberIDs.forEach((element) => {
             userQueue.push(getUserById(element).then((user)=>{
               console.log("User: ", user);
       
               users.push(user);
 
-            }, (result)=>{
-              console.log("reject func", result);
-              return res.status(400).send(`This is a failure: \n ${result}`);
+            }, (reason)=>{
+              console.log("reject func", reason);
+              //return res.status(400).send(`This is a failure: \n ${reason}`);
             }).catch((e)=>{
-              return res.status(500).send(`Exception: \n ${e}`);
+              console.log("something bad happened", e);
+
+              //return res.status(500).send(`Exception: \n ${e}`);
             })
             );
       });
 
       await Promise.all(userQueue).then((results)=>{
         console.log("all resolved ", results);
+      },
+      (reason) => {
+        console.log("Something failed in the promise group.", reason);
       });
 
       console.log("Final form: users -> ", users)
@@ -571,23 +579,41 @@ app.route('/api/convos/:convoID?')
       return users;
     };
 
-    getAllMembers().then((users)=>{
-      console.log("Users are here.....................", users);
-      convo.members = users.map(user=>({user: user, joinedAt: convo.createdAt}));
-      //convo.isP2P = true;
+    try{
+      getAllMembers().then((users)=>{
+        console.log("Users are here.....................", users);
+        convo.members = users.map(user=>({user: {_id:user._id, name: user.name, email: user.email}, joinedAt: convo.createdAt}));
+        //convo.isP2P = true;
+  
+        convo.save().then(async (doc)=>{
+          await users.forEach(async (user)=>{
+            let convos = user.convos.push(doc);
+            await user.save({convos: convos});
+            console.log(
+              "User saved", user
+            );
+          });
+          res.status(200).json({success: true, convo: convo});
+        },
+        (reason)=>{
+          console.log(reason);
+          res.status(500).json({success: false, err: reason});
+        });
+  
+        // res.status(200).send(`Everything was OK: \n ${users}`);
+  
+      },
+      (reason)=>{
+        console.log(reason);
+        res.status(500).json({success: false, err: reason});
+      }).catch((err)=>{
+        res.status(500).json({success: false, err});
+      });
+    } catch(e){
+      res.status(500).json({success: false, err: e});
+    }
 
-      convo.save().then((doc)=>{
-        users.forEach(async (user)=>{
-          let convos = user.convos.push(doc);
-          await user.save({convos: convos});
-        })
-      })
-
-      res.status(200).send(`Everything was OK: \n ${users}`);
-    }).catch((err)=>{
-      res.status(500).send(`Something failed: \n ${err}`);
-    });
-  }
+  } //End of if(user)
 
   // return res.status(404).send("Invalid DATA.");
 });

@@ -42,79 +42,8 @@ const fakeAuth = {
 // const socket = IO();
 
 import * as auth from "../utilities/authHelperFunctions" 
+import {addUser} from "../utilities/dbHelperFunctions"
 
-
-// const Logger = (ComponentToProtect:any, loginHandler:any, routing:any)=>{
-//     return class extends React.Component <any, any, any>{
-//       constructor(props:any) {
-//         super(props);
-//         props = {
-//             ...this.props,
-//             loginHandler,
-//             routing
-//         }
-//         this.state = {
-//           loggedIn: false
-//         };
-//       }
-
-//       login = (a:any, b:any, routing:any)=>{
-//         //making request to server: /login
-//         auth.login(a, b).then(
-//             (result:any)=>{
-//                 
-//                 let {token , err, user} = result.data;
-//                 if(user){
-//                     
-
-
-//                     routing.history.push('/');
-
-//                     // this.setState({
-//                     //     isAuthenticated: true,
-//                     //     user: user
-//                     // })
-
-//                 } else {
-//                     
-//                 }
-
-//                 
-
-//                 
-//                 
-//             }
-//         ); 
-//     }
-
-  
-  
-//       render() {
-//         const { loggedIn } = this.state;
-//         
-
-//         if (loggedIn) {
-//           return <Redirect to="/" />;
-//         }
-//         return (
-//             <ComponentToProtect {...this.props} routing={this.props.routing} loginHandler= {this.login} />
-//         );
-//       }
-//     }
-//   }
-
-// const PrivateRoute = (Component: any, ...rest:any ) => (
-//     <Route {...rest} render={props => (
-//       rest.user ? (
-//         <Component {...props}/>
-//       ) : (
-//         <Redirect to={{
-//           pathname: '/login',
-//           state: { from: props.location }
-//         }}/>
-//       )
-//     )}/>
-// )
 const Container = (ComponentToProtect:any, u:any, cookie:any)=>{
     
 
@@ -213,63 +142,24 @@ const Container = (ComponentToProtect:any, u:any, cookie:any)=>{
 class App extends React.Component <any, any>{
     constructor(props:any){
         super(props);
-        // 
+        props = {
+            ...this.props,
+            regValidation: {}
+        }
         console.log("CONSTRUCTOR: App.");
-
-        // 
-
-        // props = { 
-        //     ...this.props,
-        //     props
-        // }
-
-        //props.isAuthenticated = true;
         
         this.state = {
             isAuthenticated: false,
             user: null
         }
 
-        // 
-        // 
-        // 
     }
      
 
     async componentDidMount (){
-        // socket.on('connect', () =>{
-        //     
-        // });
 
-        // socket.on('disconnect', () =>{
-        //     
-        // });
-
-        // socket.on('newPost', (newPost:{text: string, from: string})=>{
-        //     
-        // })
-        // auth.knockknock(this.props.cookie).then(
-        //     (response:any)=>{
-        //     let token = response.data.token;
-        //     
-        //     this.setState({isAuthenticated: true});
-        //     //return true;
-        // },
-        // function(response:any){
-        //     
-        //     this.setState({isAuthenticated: false});
-        //     //return false;
-        // }).catch((reason)=>{
-        //     
-        //     this.setState({isAuthenticated: false});
-        // });  
 
     }
-
-    // componentDidUpdate = () => {
-    //     
-
-    // }
 
     login = (a:any, b:any, routing:any)=>{
         //making request to server: /login
@@ -315,6 +205,18 @@ class App extends React.Component <any, any>{
         ); 
     }
 
+    register = (user:object) => {
+        addUser(user).then((result:{success:boolean})=>{
+            if(result.success){
+                console.log("New user registered.");
+                this.props.history.push("/login");
+            } else{
+                console.log("Registration failed.");
+                this.props.history.push("/login");
+            }
+        })
+    }
+
     logout = ()=>{
         auth.logout();
     }
@@ -344,6 +246,13 @@ class App extends React.Component <any, any>{
 
     render(){
         console.log("RENDER: App.");
+
+        let regValidation = {
+            name: "",
+            email: "",
+            password: "",
+            repeat: ""
+        };
 
         let rNum = Math.random();
         // 
@@ -416,8 +325,8 @@ class App extends React.Component <any, any>{
             {/* <Route path="/login" render={(props:any)=>{
 
                     return this.state.user ? <Redirect to="/"/> : <Login loginHandler={this.login} />
-            }}></Route>
-            <Route path="/register" render={()=><Register/>}></Route> */}
+            }}></Route> */}
+            <Route path="/register" render={()=><Register registerHandler={this.register} errors={regValidation}/>}></Route>
             {/* <Route path="/home" component={()=><Dashboard user={this.state.user}/>}></Route>
             <Route exact path="/" component={(props:any)=>{
                     

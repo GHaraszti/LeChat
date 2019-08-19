@@ -1,5 +1,8 @@
 import * as React from "react";
 import { Route, Link, withRouter} from "react-router-dom";
+import {addConvo} from "../utilities/dbHelperFunctions" 
+
+import * as IO from "socket.io-client";
 
 import {connect} from "react-redux";
 
@@ -28,6 +31,8 @@ const mapDispatcherToProps = {
     }
   })
 };
+
+const socket = IO();
 
 const mapStateToProps = (state:any, ownProps:any) => {
 console.log("Store updated!!! dashboard: ", state, ownProps);
@@ -111,9 +116,30 @@ class Dashboard extends React.Component <any, any, any>{
       this.props.getUser(email);
     }
 
-    postNewConvo = (convo: {members:[any], name:string, isP2P:boolean})=>{
-      this.props.addConvo(convo);
-    }
+    // postNewConvo = (convo: {members:[any], name:string, isP2P:boolean})=>{
+    //   this.props.addConvo(convo);
+    //   console.log("Dashboard will require re-render");
+    // }
+
+  postNewConvo = (newConvo:{[key:string]:any}) => {
+      if(this.state.nameInput !== ""){
+          addConvo(newConvo).then((result:any)=>{
+              if(result && result.success){
+                  console.log("New group has been created!", result);
+                  socket.emit('joinRooms', [result.convo._id]);
+
+                  let newConvoArray = [...this.state.convos, result.convo._id];
+                  this.setState({
+                    convos: newConvoArray
+                  })
+              } else{
+                  console.log("New group couldn't be created!");
+              }
+          })
+      } else {
+          console.log("A name is mandatory for the new Convo!");
+      }
+  }
 
     render(){
       console.log("Dashboard: render: user & state: ", this.props.user, this.state);
@@ -152,7 +178,7 @@ class Dashboard extends React.Component <any, any, any>{
                     {/*<!-- Topbar Navbar -->*/}
                     <ul className="navbar-nav ml-auto">
                       
-                      <DropDown fetchUser={this.fetchUser} postNewConvo={this.postNewConvo} members={this.props.state.members} user={this.props.user}/>
+                      <DropDown fetchUser={this.fetchUser} postNewConvo={this.postNewConvo} members={this.props.state.members} user={this.props.user} socket={socket}/>
 
                       <div className="topbar-divider d-none d-sm-block"></div>
           
@@ -189,7 +215,7 @@ class Dashboard extends React.Component <any, any, any>{
                   </nav>
                   {/*<!-- End of Topbar -->*/}
           
-                    <ConvoArea convoID={this.state.focus.convo.ID} user={this.props.user}/>
+                    <ConvoArea convoID={this.state.focus.convo.ID} user={this.props.user} socket={socket}/>
           
                 </div>
                 {/*<!-- End of Main Content -->*/}

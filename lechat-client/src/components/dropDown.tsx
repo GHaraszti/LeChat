@@ -84,6 +84,32 @@ class DropDown extends React.Component<any, any, any>{
         }
     }
 
+    // createConvo = () => {
+    //     if(this.state.nameInput !== ""){
+    //         let members = this.state.membersOutput.map((member:any)=>{
+    //             return member._id;
+    //         })
+    
+    //         let newConvo = {
+    //             members,
+    //             name: this.state.nameInput,
+    //             P2P: false
+    //         };
+
+    //         addConvo(newConvo).then((result:any)=>{
+    //             if(result && result.success){
+    //                 console.log("New group has been created!", result);
+    //                 this.props.socket.emit('joinRooms', [result.convo._id]);
+
+    //             } else{
+    //                 console.log("New group couldn't be created!");
+    //             }
+    //         })
+    //     } else {
+    //         console.log("A name is mandatory for the new Convo!");
+    //     }
+    // }
+
     createConvo = () => {
         if(this.state.nameInput !== ""){
             let members = this.state.membersOutput.map((member:any)=>{
@@ -96,13 +122,7 @@ class DropDown extends React.Component<any, any, any>{
                 P2P: false
             };
 
-            addConvo(newConvo).then((result:any)=>{
-                if(result && result.success){
-                    console.log("New group has been created!");
-                } else{
-                    console.log("New group couldn't be created!");
-                }
-            })
+            this.props.postNewConvo(newConvo);
         } else {
             console.log("A name is mandatory for the new Convo!");
         }

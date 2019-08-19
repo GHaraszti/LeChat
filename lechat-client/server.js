@@ -56,7 +56,7 @@ io.on('connection', (socket) =>{
         });
 
         // socket.emit('newMessage', generateMessage('Admin', 'Welcome to the chat app'));
-        setTimeout(()=>{socket.broadcast.to(params[0]._id).emit('listen')}, 5000);
+        //setTimeout(()=>{socket.broadcast.to(params[0]._id).emit('listen')}, 5000);
 
         // callback();
       });

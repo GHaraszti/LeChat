@@ -64,6 +64,21 @@ const addConvo = (convo:object) => {
         {withCredentials: true}
     ).then(
         function(response:any){
+            return {success: response.data.success, convo: response.data.convo};
+        },
+        function(){
+            return {success: false}
+        }
+    )
+}
+
+const addUser = (user:object) => {
+    return axios.post(
+        url + '/api/users/',
+        {...user},
+        {withCredentials: true}
+    ).then(
+        function(response:any){
             return {success: true};
         },
         function(){
@@ -76,5 +91,6 @@ export {
     fetchPosts,
     addPost,
     fetchUser,
-    addConvo
+    addConvo,
+    addUser
 }
