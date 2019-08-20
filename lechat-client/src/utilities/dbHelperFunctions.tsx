@@ -23,6 +23,26 @@ const fetchPosts = (convoID:string) =>{
     });
 }
 
+const fetchConvos = (email:string) =>{
+    console.log("????????????????:", getToken(window.document.cookie));
+    console.log("fetching convos for email: ", email);
+    return axios.get(
+        url + '/api/convos/' + email,
+        {withCredentials: true}
+    ).then(
+        function(response:any){
+        let list = response.data.convos;
+        console.log("GET Convos: response: ", list);
+
+        return {list, success: true};
+    },
+        function(response:any){
+
+        console.log("FAIL: Coud not retrieve convos");
+        return {success: false};
+    });
+}
+
 const addPost = (post:object) => {
     return axios.post(
         url + '/api/post',
@@ -91,6 +111,7 @@ export {
     fetchPosts,
     addPost,
     fetchUser,
+    addUser,
     addConvo,
-    addUser
+    fetchConvos
 }

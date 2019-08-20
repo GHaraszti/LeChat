@@ -13,13 +13,17 @@ class SideMenu extends React.Component <any, any, any>{
         }
     }
 
+    componentDidMount(){
+      this.props.fetchConvos(this.props.user.email)
+    }
+
     componentDidUpdate (){
       console.log("Side menu updated: ", this.state);
     }
 
     render(){
       console.log("Render SideMenu: state and app", this.state, this.props);
-      let list = this.state.convoList;
+      let list = this.props.convos;
       console.log(list);
 
         const html = (

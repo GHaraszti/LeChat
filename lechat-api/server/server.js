@@ -102,8 +102,9 @@ app.use(function(req, res, next){
     } else {
       res.status(401).json({
         redirect: true
-      })
+      });
     }
+    // next(); //Remove after debugging
   }
 })
 
@@ -375,12 +376,14 @@ app.post('/api/post/', (req, res) => {
 });
 
 //GET all posts from one group/conversation
-app.get('/api/posts/:convoID', (req, res) => {
+app.get('/api/posts/:convoID', async (req, res) => {
   let id = req.params.convoID;
 
   if(!id){
     res.status(500).send("ConvoID not provided.");
   }
+
+  let user = await User.findOne({convos: {_id: id}})
 
   Post.find({"convo": id}).then((posts) => {
     console.log(posts)
@@ -478,36 +481,42 @@ app.delete('api/post/:postID', (req, res) => {
 //   next();
 // })
 
-app.param('convoID', function(req, res, next, id){
-  console.log("PARAM BODY:", req.body);
-  if(!id){
-    req.convo= {
-      id: id,
-      name: req.body.members && "",
-      members: req.body.members && [],
-      isP2P: this.members.length == 2,
-      createdAt: req.body.createdAt && new Date()  
-    };
-  } else {
-    if(ObjectID.isValid(id)) req.id = id;
-  }
+// app.param('convoID', function(req, res, next, id){
+//   console.log("PARAM BODY:", req.body);
+//   if(!id){
+//     req.convo= {
+//       id: id,
+//       name: req.body.members && "",
+//       members: req.body.members && [],
+//       isP2P: this.members.length == 2,
+//       createdAt: req.body.createdAt && new Date()  
+//     };
+//   } else {
+//     if(ObjectID.isValid(id)) req.id = id;
+//   }
 
-  next();
-})
+//   next();
+// })
 
 //Test users
 
 // { "_id" : ObjectId("5d3250f5ecc08368d02a951f"), "email" : "ewq@asd.com", "name" : "Letoi", "pw_hash" : "$2a$05$pNf57iEUuQ7dpyR3scKo1.tScjzfDLS6AFDpDUXEgfDUOJG1wR.d.", "convos" : [ ], "__v" : 0 }
 // { "_id" : ObjectId("5d3250ffecc08368d02a9520"), "email" : "qwe@asd.com", "name" : "Lemoi", "pw_hash" : "$2a$05$ocKaduiDcyihF57EtiRuwuXLujqylxzeytAgzfDXzYImNBCKspqsm", "convos" : [ ], "__v" : 0 }
 
-app.route('/api/convos/:convoID?')
+app.route('/api/convos/:email?')
 .get(function(req, res, next){
   console.log("GET convos", req.convo);
 
-  let id = req.id;
+  var id = req.params.email;
 
-  Convo.findById(id).then((doc)=>{
-    return res.status(200).json({doc});
+  User.findOne({email: id}).then((user)=>{
+    return user;
+    //res.status(200).json({doc});
+  }).then((user)=>{
+    res.status(200).json({success: true, convos: user.convos});
+  },
+  (reason)=>{
+    res.status(400).json({success: false, err: reason});
   })
 })////////////////////////////////////
 .post(function(req, res, next){

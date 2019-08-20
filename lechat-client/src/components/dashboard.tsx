@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Route, Link, withRouter} from "react-router-dom";
-import {addConvo} from "../utilities/dbHelperFunctions" 
+//import {addConvo} from "../utilities/dbHelperFunctions" 
 
 import * as IO from "socket.io-client";
 
@@ -25,10 +25,22 @@ const mapDispatcherToProps = {
           convoID
       }
   }),
+  getConvos: (email:string) => ({ type: 'FETCH_CONVOS', 
+    content: {
+        email
+    }
+  }),
   getUser: (email:string) => ({type: 'FETCH_USER',
     content: {
       email
     }
+  }),
+  addConvo: (convo:any, createdBy:string, socket:any) => ({type: 'ADD_CONVO',
+    content: {
+      convo: convo,
+      createdBy
+    },
+    socket: socket
   })
 };
 
@@ -82,6 +94,10 @@ class Dashboard extends React.Component <any, any, any>{
         //this.postMessage = this.postMessage.bind(this);
     }
 
+    componentDidMount(){
+      this.fetchConvos(this.props.user.email);
+    }
+
     convoLoader = (convoID:string)=>{
       console.log("Loading convo...", convoID);
       // this.setState({
@@ -116,38 +132,48 @@ class Dashboard extends React.Component <any, any, any>{
       this.props.getUser(email);
     }
 
+    fetchConvos = (email:string)=>{
+      this.props.getConvos(email);
+    }
     // postNewConvo = (convo: {members:[any], name:string, isP2P:boolean})=>{
     //   this.props.addConvo(convo);
     //   console.log("Dashboard will require re-render");
     // }
 
-  postNewConvo = (newConvo:{[key:string]:any}) => {
-      if(this.state.nameInput !== ""){
-          addConvo(newConvo).then((result:any)=>{
-              if(result && result.success){
-                  console.log("New group has been created!", result);
-                  socket.emit('joinRooms', [result.convo._id]);
+  // postNewConvo = (newConvo:{[key:string]:any}) => {
+  //     if(this.state.nameInput !== ""){
+  //         addConvo(newConvo).then((result:any)=>{
+  //             if(result && result.success){
+  //                 console.log("New group has been created!", result);
+  //                 socket.emit('joinRooms', [result.convo._id]);
 
-                  let newConvoArray = [...this.state.convos, result.convo._id];
-                  this.setState({
-                    convos: newConvoArray
-                  })
-              } else{
-                  console.log("New group couldn't be created!");
-              }
-          })
-      } else {
-          console.log("A name is mandatory for the new Convo!");
-      }
+  //                 let newConvoArray = [...this.state.convos, result.convo._id];
+  //                 this.setState({
+  //                   convos: newConvoArray
+  //                 })
+  //             } else{
+  //                 console.log("New group couldn't be created!");
+  //             }
+  //         })
+  //     } else {
+  //         console.log("A name is mandatory for the new Convo!");
+  //     }
+  // }
+
+  postNewConvo = (newConvo:{[key:string]:any}) => {
+    console.log("Adding new convo", newConvo, this.props.user);
+    this.props.addConvo(newConvo, this.props.user, socket);
   }
 
     render(){
-      console.log("Dashboard: render: user & state: ", this.props.user, this.state);
+      console.log("Dashboard: render: props & state: ", this.props, this.state);
+        let convosList = this.props.state.convos || [];
+        console.log("Dashboard: convos: ", this.props.state.convos);
         const html = 
             // {/*<!-- Page Wrapper -->*/}
             <div id="wrapper">
           
-            <SideMenu convos={this.state.convos} convoLoader={this.convoLoader}/>
+            <SideMenu convos={convosList} convoLoader={this.convoLoader} fetchConvos={this.fetchConvos} user={this.props.user}/>
           
               {/* {/*<!-- Content Wrapper -->*/}
               <div id="content-wrapper" className="d-flex flex-column">

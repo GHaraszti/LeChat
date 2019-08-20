@@ -20,7 +20,7 @@ class PostBox extends React.Component<any, any, any>{
 
     postMessage = (event: any) => {
         //alert(this.props);
-        this.props.clickHandler({sentBy: "qwe@asd.com", text: this.state.textInput});
+        this.props.clickHandler({text: this.state.textInput});
         console.log(this.state.textInput);
         this.setState({
             textInput : ""

@@ -111,7 +111,8 @@ class ConvoArea extends React.Component<any, any, any>{
     //     this.props.getComments(this.props.convoID);
     // }
 
-    uploadNewMessage = async (newMessage:{username: string, text: string, convoID:string}) => {
+    uploadNewMessage = async (newMessage:{sentBy: string, text: string, convoID:string}) => {
+        newMessage.sentBy = this.props.user.email;
         // this.state.messages.push(newMessage);
         // //console.log(this.state.messages);
         //await         console.log("Before dispatch: ", socket);
