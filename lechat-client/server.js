@@ -14,6 +14,17 @@ const React = require('react');
 
 const ReactDOMServer = require('react-dom/server');
 
+//Initializing ENV vars
+
+//ENV variables
+// const api_hostname = process.env.API_HOSTNAME || "localhost"
+// const api_port = process.env.API_PORT || 3000;
+// const client_hostname = process.env.CLIENT_HOSTNAME || "localhost"
+const client_port = process.env.CLIENT_PORT || 8080;
+// const {client_port} = require('./keys/keys');
+
+console.log("This are the server env vars", process.env);
+
 //Socket setup
 const server = http.createServer(app);
 const io = socketIO(server);
@@ -107,6 +118,6 @@ app.use((error, request, response, next) => {
 
 // app.use(errorHandler);
 
-server.listen(httpPort, ()=>{
-    console.log(`HTTP server is listening on ${httpPort}`)
+server.listen(client_port, ()=>{
+    console.log(`HTTP server is listening on ${client_port}`)
 });

@@ -1,3 +1,4 @@
+// require('./keys');
 require('./config/config');
 
 const path = require('path');
@@ -24,8 +25,13 @@ const {Convo} = require('./models/convo');
 const app = express();
 // const static = express();
 
+//Initializing ENV vars
+
 //ENV variables
-const port = process.env.PORT || 3000;
+const api_ip = process.env.API_IP || "localhost"
+const api_port = process.env.API_PORT || 3000;
+const client_ip = process.env.CLIENT_IP || "localhost"
+const client_port = process.env.CLIENT_PORT || 8080;
 const secret = process.env.SECRET || "There is no secret";
 
 
@@ -66,7 +72,7 @@ app.use(bodyParser.json());
 // });
 
 app.use(
-  cors({credentials: true, origin: 'http://localhost:8080'})
+  cors({credentials: true, origin: `http://${client_ip}:${client_port}`})
 );
 
 app.use(function(req, res, next){
@@ -675,8 +681,8 @@ app.get('*', function(req, res){
 }); 
 
 
-app.listen(port, () => {
-   console.log(`Started on port ${port}`);
+app.listen(api_port, () => {
+   console.log(`Started on port ${api_port}`);
 });
 
 // static.listen(8080, () => {

@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const apiURL = "http://localhost:3000";
+//ENV variables 
+const api_hostname = process.env.API_HOST || "localhost";
+const api_port = process.env.API_PORT || 3000;
+
+const apiURL = `http://${api_hostname}:${api_port}`;
+
 const knockknock = async (cookies: string) => {
 
     const token = getToken(cookies);
