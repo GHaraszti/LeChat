@@ -28,9 +28,9 @@ const app = express();
 //Initializing ENV vars
 
 //ENV variables
-const api_ip = process.env.API_IP || "localhost"
+const api_host = process.env.API_HOST || "localhost"
 const api_port = process.env.API_PORT || 3000;
-const client_ip = process.env.CLIENT_IP || "localhost"
+const client_host = process.env.CLIENT_HOST || "localhost"
 const client_port = process.env.CLIENT_PORT || 8080;
 const secret = process.env.SECRET || "There is no secret";
 
@@ -72,7 +72,7 @@ app.use(bodyParser.json());
 // });
 
 app.use(
-  cors({credentials: true, origin: `http://${client_ip}:${client_port}`})
+  cors({credentials: true, origin: `http://${client_host}:${client_port}`})
 );
 
 app.use(function(req, res, next){
