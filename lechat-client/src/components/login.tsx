@@ -43,7 +43,6 @@ class Login extends React.Component<any, any>{
         //alert(this.props);
         var success = this.props.loginHandler(this.state.userEmail, this.state.userPassword, this.props.routing);
         console.log("---------------------------------");
-        console.log("Logging to: ", this.state.userEmail, this.state.userPassword);
 
         if(success){
           console.log("Login waiting results...", success)
@@ -95,9 +94,9 @@ class Login extends React.Component<any, any>{
                       <Link to={"/"} className="btn btn-primary btn-user btn-block" onClick={this.postLogin}>Login</Link>
                     </form>
                     <hr/>
-                    <div className="text-center">
+                    {/* <div className="text-center">
                       <a className="small" href="forgot-password.html">Forgot Password?</a>
-                    </div>
+                    </div> */}
                     <div className="text-center">
                     <Link to={"/register"} className="small">Don't have account yet? Register</Link>
                     </div>

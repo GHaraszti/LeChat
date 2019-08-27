@@ -8,13 +8,15 @@ class SideMenu extends React.Component <any, any, any>{
 
         console.log("SideMenu: props: ", this.props);
         this.state = {
-          convoList : this.props.convos || [],
-          convoFocus : Array.isArray(this.props.convos) && this.props.convos.length > 0 ? this.props.convos[0]._id : null
+          convoList : this.props.user.convos || [],
+          convoFocus : Array.isArray(this.props.user.convos) && this.props.user.convos.length > 0 ? this.props.user.convos[0]._id : null
         }
     }
 
     componentDidMount(){
-      this.props.fetchConvos(this.props.user.email)
+      if(this.props.user.convos){
+        this.props.fetchConvos(this.props.user.email)
+      }
     }
 
     componentDidUpdate (){

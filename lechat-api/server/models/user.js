@@ -56,7 +56,7 @@ User.collection.getIndexes().then((doc)=>{
                   }
             );
       } else {
-            console.log("[email] index exists.\n", doc);
+            console.log("[Email] index exists. Indexes: ", doc);
       }
 });
 

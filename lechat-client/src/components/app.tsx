@@ -165,11 +165,11 @@ class App extends React.Component <any, any>{
         //making request to server: /login
         auth.login(a, b).then(
             (result:any)=>{
-                console.log("logging: App");
+                console.log("logging: App result: ", result);
 
                 let {token , err, user} = result.data;
                 if(user){
-                    console.log("logging: App-> SUCCESS");
+                    console.log("logging: App-> SUCCESS", result);
 
 
 

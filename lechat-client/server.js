@@ -21,9 +21,8 @@ const ReactDOMServer = require('react-dom/server');
 // const api_port = process.env.API_PORT || 3000;
 // const client_hostname = process.env.CLIENT_HOSTNAME || "localhost"
 const client_port = process.env.CLIENT_PORT || 8080;
-// const {client_port} = require('./keys/keys');
 
-console.log("This are the server env vars", process.env);
+console.log("This is the api host", process.env.API_HOST);
 
 //Socket setup
 const server = http.createServer(app);

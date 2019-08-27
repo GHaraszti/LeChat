@@ -5,6 +5,7 @@ const api_hostname = process.env.API_HOST || "localhost";
 const api_port = process.env.API_PORT || 3000;
 
 const apiURL = `http://${api_hostname}:${api_port}`;
+console.log("this is the api URL", apiURL);
 
 const knockknock = async (cookies: string) => {
 
@@ -14,7 +15,7 @@ const knockknock = async (cookies: string) => {
     if(token){
         return axios({
             method: "GET",
-            url:`${apiURL}/auth/${token}`,
+            url:`/api/auth/${token}`,
             validateStatus: function (status) {
                 return status >= 200 && status < 300; // default
             },
@@ -53,7 +54,7 @@ const login = async (email:any, password:any) =>{
 
     return axios({
         method: "POST",
-        url:`${apiURL}/login/`,
+        url:`/api/login/`,
         data: {
             email, password
         },

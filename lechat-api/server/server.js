@@ -1,5 +1,7 @@
-// require('./keys');
+//mongo configurations
 require('./config/config');
+//ENV vars initialization
+let gotENVs = require('dotenv').config({path: __dirname + "/.env"});
 
 const path = require('path');
 const _ = require('lodash');
@@ -32,7 +34,10 @@ const api_host = process.env.API_HOST || "localhost"
 const api_port = process.env.API_PORT || 3000;
 const client_host = process.env.CLIENT_HOST || "localhost"
 const client_port = process.env.CLIENT_PORT || 8080;
-const secret = process.env.SECRET || "There is no secret";
+
+console.log("Config successful? ", gotENVs);
+console.log("Secret from .env", process.env.SECRET);
+const secret = process.env.SUPER_SECRET || process.env.SECRET;
 
 
 //Server secret
@@ -83,9 +88,10 @@ app.use(function(req, res, next){
     const token = matches[1] || matches[2];
     jwt.verify(token, secret, function(err, payload){
       if(payload){
-        console.log("Hello friend.");
+        console.log("Hello friend.", payload);
         User.findOne({email: payload.email}).then(
           (doc)=>{
+            console.log("Doc: ", doc);
             req.user = doc;
             next();
           }
@@ -100,9 +106,11 @@ app.use(function(req, res, next){
     })
   } catch(e){
     console.log("Not authenticated.");
+    console.log("Path: ", req.path);
 
     //These routes are allowed to proceed without authentication
-    if(req.path == "/login/" || req.path == "/api/users/"){
+    if(req.path == "/login/" || req.path == "/users/"){
+
       req.user = null;
       next();
     } else {
@@ -168,9 +176,10 @@ const verifyUser = (token) => {
 }
 
 app.get('/auth/:token', (req, res, next)=>{
+  console.log("GET: auth");
   var token = req.params.token;
 
-  console.log(`Token: ${req.params} \n`);
+  console.log(`Token: \n`, req.params);
 
   //If for some reason client side validation fails and sends no token
   if(!token){
@@ -189,7 +198,7 @@ app.get('/auth/:token', (req, res, next)=>{
 
   if(cert){
     let email = cert.email;
-    console.log(`Cert: ${cert} \n`);
+    console.log(`Cert: \n`, cert);
   
     User.findOne({email: email}).then((user) => {
       console.log("User: ", user);
@@ -200,6 +209,7 @@ app.get('/auth/:token', (req, res, next)=>{
         return convo;
       });
 
+      console.log("User...", user);
       console.log("User convos...", convos);
   
       res.status(200).json({
@@ -223,7 +233,8 @@ app.get('/auth/:token', (req, res, next)=>{
 
 });
 
-app.post('/login', (req, res) => {
+app.post('/login/', (req, res) => {
+  console.log("POST: login");
   //{ "_id" : ObjectId("5d251411c54599a46a44ce67"), "email" : "qwe@zxc.com", "name" : "EL", "pw_hash" : "$2a$05$6LY5hQO0sAzIUxyYS7Un6O16XSbkp.bkLNhTLcNf9XVNuul.laVtK", "__v" : 0 }
   console.log("Body: \n", req.body);
   const {email, password} = req.body;
@@ -236,16 +247,18 @@ app.post('/login', (req, res) => {
   }
 
   console.log("Request body: ", req.body);
+  console.log("Request user: ", req.user);
   console.log("Requesting submitted: ", email, password);
 
-  User.findOne({email: email}).then(
-
-    (user)=>{
+  let gettingUser = User.findOne({email: email}).exec();
+  
+  gettingUser.then(
+    function(user){
       if(user){
-
+        console.log("Login: user: ", user);
         bcrypt.compare(password, user.pw_hash, function(err, result){
           if(result === true){
-            console.log("Welcome ", user.name);
+            console.log("Welcome ", user);
             let token = jwt.sign({email: user.email}, secret, {expiresIn: 3600000});
     
             // //Give the user an updated token
@@ -255,13 +268,21 @@ app.post('/login', (req, res) => {
             // ()=>{
             //   console.log("User token update failed."); 
             // });
+
+            console.log("Login returns: ", {
+              _id: user._id,
+              email: user.email,
+              name: user.name,
+              convos: user.convos
+            });
     
             res.status(200).json({
                success: true,
                err: null,
                token,
                user: {
-                 email,
+                 _id: user._id,
+                 email: user.email,
                  name: user.name,
                  convos: user.convos
                }
@@ -277,13 +298,13 @@ app.post('/login', (req, res) => {
       }
     
     },
-    (reason)=>{
+    function(reason){
       res.status(400).json({
         success: false,
         error: "A user with that email cannot be found.",
         token: null
       }); 
-    }).catch(()=>{
+    }).catch(function(){
       res.status(500).json({
         success: false,
         error: "Oops, something happened, gimme a sec...",
@@ -300,13 +321,17 @@ app.post('/login', (req, res) => {
 
 });
 
-app.post('/api/users', (req, res)=>{
+app.post('/users', (req, res)=>{
   //email validation
+  console.log("POST: users");
+
   if(false){
     return res.status(404).send();
   }
 
   bcrypt.hash(req.body.password, 5, function(err, hash){
+    console.log("Hash successfull", hash);
+
     var user = new User({
       email: req.body.email,
       name: req.body.name,
@@ -314,15 +339,19 @@ app.post('/api/users', (req, res)=>{
     });
   
     user.save().then((doc)=>{
+      console.log("User saved: \n", doc);
+
       res.send(doc);
     }, (e)=>{
+      console.log("User save creation failed\n", e);
       res.status(400).send(e);
     });
   });
 });
 
-app.get('/api/user/:email', (req, res) =>{
-  var email = req.params.email;
+app.get('/user/:email', (req, res) =>{
+  console.log("GET: user");
+  let email = req.params.email;
 
   // if(!ObjectID.isValid(id)) {
   //   return res.status(404).send();
@@ -345,13 +374,16 @@ app.get('/api/user/:email', (req, res) =>{
     if(!user) {
       return res.status(404).send();
     }
-    res.status(200).json({name: user.name, email: user.email, _id: user.id});
+    console.log("GET user: email -> user: ", user);
+    res.status(200).json({name: user.name, email: user.email, _id: user._id});
   }).catch((e) => {
      res.status(400).send();
   });
 });
 
-app.post('/api/post/', (req, res) => {
+app.post('/post/', (req, res) => {
+  console.log("POST: post");
+
   var email = req.body.sentBy;
   var convoID = req.body.convoID;
 
@@ -382,7 +414,8 @@ app.post('/api/post/', (req, res) => {
 });
 
 //GET all posts from one group/conversation
-app.get('/api/posts/:convoID', async (req, res) => {
+app.get('/posts/:convoID', async (req, res) => {
+  console.log("GET: posts");
   let id = req.params.convoID;
 
   if(!id){
@@ -406,11 +439,12 @@ app.get('/api/posts/:convoID', async (req, res) => {
   console.log("Test page");
 });
 
-app.get('api/post/:userID', (req, res) =>{
+app.get('/post/:userID', (req, res) =>{
+  console.log("GET: post");
   //Test user
   //{ "_id" : ObjectId("5d0bd7baa35a0b13f3bb2a89"), "email" : "someone@something.smg", "name" : "Lemoi", "__v" : 0 }
 
-  var id = req.params.userID;
+  let id = req.params.userID;
 
   if(!ObjectID.isValid(id)) {
     return res.status(404).send();
@@ -428,6 +462,8 @@ app.get('api/post/:userID', (req, res) =>{
 });
 
 app.delete('api/post/:postID', (req, res) => {
+  console.log("DELETE: post");
+
    var id = req.params.postID;
 
    if(!ObjectID.isValid(id)) {
@@ -509,16 +545,15 @@ app.delete('api/post/:postID', (req, res) => {
 // { "_id" : ObjectId("5d3250f5ecc08368d02a951f"), "email" : "ewq@asd.com", "name" : "Letoi", "pw_hash" : "$2a$05$pNf57iEUuQ7dpyR3scKo1.tScjzfDLS6AFDpDUXEgfDUOJG1wR.d.", "convos" : [ ], "__v" : 0 }
 // { "_id" : ObjectId("5d3250ffecc08368d02a9520"), "email" : "qwe@asd.com", "name" : "Lemoi", "pw_hash" : "$2a$05$ocKaduiDcyihF57EtiRuwuXLujqylxzeytAgzfDXzYImNBCKspqsm", "convos" : [ ], "__v" : 0 }
 
-app.route('/api/convos/:email?')
+app.route('/convos/:email?')
 .get(function(req, res, next){
-  console.log("GET convos", req.convo);
+  console.log("GET: convos", req.params);
 
-  var id = req.params.email;
+  let id = req.params.email;
 
   User.findOne({email: id}).then((user)=>{
-    return user;
+    console.log("GET: convos: from email ", user);
     //res.status(200).json({doc});
-  }).then((user)=>{
     res.status(200).json({success: true, convos: user.convos});
   },
   (reason)=>{
@@ -526,18 +561,21 @@ app.route('/api/convos/:email?')
   })
 })////////////////////////////////////
 .post(function(req, res, next){
-
+  console.log("POST: convos");
+  console.log("body: ", req.body);
   if(req.body) {
-    var memberIDs = req.body.members.length ? req.body.members : [];
+    let memberIDs = req.body.members.length ? req.body.members : [];
 
-    var convo = new Convo({
+    console.log("Members: ", memberIDs);
+
+    let convo = new Convo({
       name: req.body.name || "",
       members: [],
       isP2P: req.body.members == true && req.body.members.length == 2,
       createdAt: req.body.createdAt || new Date()  
     });
     
-    var getUserById = (id) => {
+    let getUserById = (id) => {
       return new Promise((resolve, reject) => {
         User.findById(id).then((user)=>{
           if(user){
@@ -549,7 +587,7 @@ app.route('/api/convos/:email?')
       });
     }
 
-    var saveConvoWithMembes = (convo) => {
+    let saveConvoWithMembes = (convo) => {
       return new Promise((resolve, reject) => {
         convo.save().then((err, result)=>{
           if(user){
@@ -561,7 +599,7 @@ app.route('/api/convos/:email?')
       });
     }
 
-    var getAllMembers = async () => {
+    let getAllMembers = async () => {
       var userQueue = [];
       var users = [];
       

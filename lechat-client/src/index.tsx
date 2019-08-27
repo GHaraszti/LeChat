@@ -32,7 +32,7 @@ sagaMiddleware.run(rootSaga);
 
 const action = (type:any) => store.dispatch({type});
 
-console.log('TESTING SAGAS');
+console.log('NEW Ver');
 
 const cookie = window.document.cookie;
 console.log("index:cookie: ///////////", cookie);

@@ -95,7 +95,7 @@ class Dashboard extends React.Component <any, any, any>{
     }
 
     componentDidMount(){
-      this.fetchConvos(this.props.user.email);
+      if(this.props.user.email) this.fetchConvos(this.props.user.email);
     }
 
     convoLoader = (convoID:string)=>{
@@ -108,15 +108,18 @@ class Dashboard extends React.Component <any, any, any>{
       //       messages: []
       //   }
       // })
-
-      this.props.getComments(convoID);  
-      this.setState({
-        focus: {
-          convo: {
-            ID: convoID
+      if(convoID) {
+        this.props.getComments(convoID);  
+        this.setState({
+          focus: {
+            convo: {
+              ID: convoID
+            }
           }
-        }
-      });
+        });
+      } else {
+        console.log("Need convoID to fetch convo.");
+      }
     }
 
     // toggleVisibility = (e:any)=>{
@@ -129,11 +132,13 @@ class Dashboard extends React.Component <any, any, any>{
     // }
 
     fetchUser = (email:string)=>{
-      this.props.getUser(email);
+      if(email) this.props.getUser(email);
+      else console.log("No email to fetch user.");
     }
 
     fetchConvos = (email:string)=>{
-      this.props.getConvos(email);
+      if(email) this.props.getConvos(email);
+      else console.log("No email to fetch convos.");
     }
     // postNewConvo = (convo: {members:[any], name:string, isP2P:boolean})=>{
     //   this.props.addConvo(convo);
