@@ -109,7 +109,7 @@ app.use(function(req, res, next){
     console.log("Path: ", req.path);
 
     //These routes are allowed to proceed without authentication
-    if(req.path == "/login/" || req.path == "/users/"){
+    if(req.path == "/api/login/" || req.path == "/api/users/"){
 
       req.user = null;
       next();
@@ -175,7 +175,7 @@ const verifyUser = (token) => {
   }
 }
 
-app.get('/auth/:token', (req, res, next)=>{
+app.get('/api/auth/:token', (req, res, next)=>{
   console.log("GET: auth");
   var token = req.params.token;
 
@@ -233,7 +233,7 @@ app.get('/auth/:token', (req, res, next)=>{
 
 });
 
-app.post('/login/', (req, res) => {
+app.post('/api/login/', (req, res) => {
   console.log("POST: login");
   //{ "_id" : ObjectId("5d251411c54599a46a44ce67"), "email" : "qwe@zxc.com", "name" : "EL", "pw_hash" : "$2a$05$6LY5hQO0sAzIUxyYS7Un6O16XSbkp.bkLNhTLcNf9XVNuul.laVtK", "__v" : 0 }
   console.log("Body: \n", req.body);
@@ -321,7 +321,7 @@ app.post('/login/', (req, res) => {
 
 });
 
-app.post('/users', (req, res)=>{
+app.post('/api/users', (req, res)=>{
   //email validation
   console.log("POST: users");
 
@@ -349,7 +349,7 @@ app.post('/users', (req, res)=>{
   });
 });
 
-app.get('/user/:email', (req, res) =>{
+app.get('/api/user/:email', (req, res) =>{
   console.log("GET: user");
   let email = req.params.email;
 
@@ -381,7 +381,7 @@ app.get('/user/:email', (req, res) =>{
   });
 });
 
-app.post('/post/', (req, res) => {
+app.post('/api/post/', (req, res) => {
   console.log("POST: post");
 
   var email = req.body.sentBy;
@@ -414,7 +414,7 @@ app.post('/post/', (req, res) => {
 });
 
 //GET all posts from one group/conversation
-app.get('/posts/:convoID', async (req, res) => {
+app.get('/api/posts/:convoID', async (req, res) => {
   console.log("GET: posts");
   let id = req.params.convoID;
 
@@ -439,7 +439,7 @@ app.get('/posts/:convoID', async (req, res) => {
   console.log("Test page");
 });
 
-app.get('/post/:userID', (req, res) =>{
+app.get('/api/post/:userID', (req, res) =>{
   console.log("GET: post");
   //Test user
   //{ "_id" : ObjectId("5d0bd7baa35a0b13f3bb2a89"), "email" : "someone@something.smg", "name" : "Lemoi", "__v" : 0 }
@@ -461,24 +461,24 @@ app.get('/post/:userID', (req, res) =>{
   });
 });
 
-app.delete('api/post/:postID', (req, res) => {
-  console.log("DELETE: post");
+// app.delete('/api/post/:postID', (req, res) => {
+//   console.log("DELETE: post");
 
-   var id = req.params.postID;
+//    var id = req.params.postID;
 
-   if(!ObjectID.isValid(id)) {
-     return res.status(404).send();
-   }
+//    if(!ObjectID.isValid(id)) {
+//      return res.status(404).send();
+//    }
 
-   Post.findByIdAndRemove(id).then((post) => {
-         if(!post) {
-            return res.status(404).send({deleted:false});
-         }
-         res.send({post: post, deleted: true});
-   }).catch((e) => {
-         res.status(400).send(e);
-   });
-});
+//    Post.findByIdAndRemove(id).then((post) => {
+//          if(!post) {
+//             return res.status(404).send({deleted:false});
+//          }
+//          res.send({post: post, deleted: true});
+//    }).catch((e) => {
+//          res.status(400).send(e);
+//    });
+// });
 
 //// Message editing not available for now
 // app.patch('/posts/:id',(req, res) => {
@@ -545,7 +545,7 @@ app.delete('api/post/:postID', (req, res) => {
 // { "_id" : ObjectId("5d3250f5ecc08368d02a951f"), "email" : "ewq@asd.com", "name" : "Letoi", "pw_hash" : "$2a$05$pNf57iEUuQ7dpyR3scKo1.tScjzfDLS6AFDpDUXEgfDUOJG1wR.d.", "convos" : [ ], "__v" : 0 }
 // { "_id" : ObjectId("5d3250ffecc08368d02a9520"), "email" : "qwe@asd.com", "name" : "Lemoi", "pw_hash" : "$2a$05$ocKaduiDcyihF57EtiRuwuXLujqylxzeytAgzfDXzYImNBCKspqsm", "convos" : [ ], "__v" : 0 }
 
-app.route('/convos/:email?')
+app.route('/api/convos/:email?')
 .get(function(req, res, next){
   console.log("GET: convos", req.params);
 
